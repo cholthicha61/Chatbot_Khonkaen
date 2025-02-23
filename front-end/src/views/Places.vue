@@ -26,7 +26,6 @@
                 <th class="px-4 py-2 text-left">Opening Hours</th>
                 <th class="px-4 py-2 text-left">Contact Link</th>
                 <th class="px-4 py-2 text-left">Image Link</th>
-                <th class="px-4 py-2 text-left">Image Detail</th>
                 <th class="px-4 py-2 text-left">Created</th>
                 <th class="px-4 py-2 text-left">Actions</th>
               </tr>
@@ -61,25 +60,6 @@
                 <td :class="!place.opening_hours ? 'text-red-500' : ''">
                   {{ formatValue(place.opening_hours) }}
                 </td>
-
-                <td>
-                  <a
-                    :href="place.contact_link"
-                    target="_blank"
-                    class="text-blue-500 hover:underline"
-                    v-if="place.contact_link"
-                  >
-                    {{ formatValue(place.contact_link) }}
-                  </a>
-                  <span :class="!place.contact_link ? 'text-red-500' : ''" v-else
-                    >No link available</span
-                  >
-                </td>
-
-                <!-- <td :class="!place.categories_name ? 'text-red-500' : ''">
-                  {{ place.categories_name || 'No category available' }}
-                </td> -->
-
                 <td>
                   <a
                     :href="place.image_link"
@@ -94,8 +74,20 @@
                   >
                 </td>
 
-                <td :class="!place.image_detail ? 'text-red-500' : ''">
-                  {{ formatValue(place.image_detail) }}
+                <td>
+                  <div v-if="place.images && place.images.length">
+                    <div v-for="(image, i) in place.images" :key="i">
+                      <a
+                        :href="image.image_link"
+                        target="_blank"
+                        class="text-blue-500 hover:underline"
+                      >
+                        Image {{ i + 1 }}
+                      </a>
+                      <span v-if="image.image_detail"> - {{ image.image_detail }}</span>
+                    </div>
+                  </div>
+                  <span v-else class="text-red-500">No images available</span>
                 </td>
 
                 <td>{{ formatDate(place.created_at) }}</td>
@@ -220,50 +212,30 @@
               ></textarea>
             </div>
 
-            <!-- <div class="mb-4">
-              <label for="add-category" class="block mb-2 font-semibold text-gray-700">
-                Category:
-              </label>
-              <select
-                id="add-category"
-                v-model="currentPlaces.category_id"
-                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option disabled value="">Select a category</option>
-                <option v-for="category in categories" :key="category.id" :value="category.id">
-                  {{ category.categories_name }}
-                </option>
-              </select>
-            </div> -->
-
             <div class="mb-4">
-              <label for="add-image-link" class="block mb-2 font-semibold text-gray-700">
-                Image Link:
-              </label>
-              <textarea
-                id="add-image-link"
-                v-model="currentPlaces.image_link"
-                type="text"
-                rows="1"
-                @input="adjustHeight"
-                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter image link (optional)"
-              ></textarea>
-            </div>
+              <label class="block mb-2 font-semibold text-gray-700"> Images: </label>
 
-            <div class="mb-4">
-              <label for="add-image-detail" class="block mb-2 font-semibold text-gray-700">
-                Image Detail:
-              </label>
-              <textarea
-                id="add-image-detail"
-                v-model="currentPlaces.image_detail"
-                type="text"
-                rows="1"
-                @input="adjustHeight"
-                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter image-detail (optional)"
-              ></textarea>
+              <div v-for="(image, index) in currentPlaces.images" :key="index" class="flex items-center space-x-2 mb-4">
+
+                <input
+                  v-model="image.image_link"
+                  type="text"
+                  class="w-full p-2 border border-gray-300 rounded-lg"
+                  placeholder="Enter image link"
+                />
+                <input
+                  v-model="image.image_detail"
+                  type="text"
+                  class="w-full p-2 border border-gray-300 rounded-lg"
+                  placeholder="Enter image detail"
+                />
+                <BaseButton color="danger" small :icon="mdiTrashCanOutline" @click="removeImage(index)" />
+              </div>
+
+              <!-- แยกปุ่มให้อยู่ด้านล่าง -->
+              <div class="flex justify-start mt-4">
+                <BaseButton color="primary" small label="+ Add Image" @click="addImage" />
+              </div>
             </div>
 
             <div class="flex justify-center space-x-2">
@@ -369,50 +341,30 @@
               ></textarea>
             </div>
 
-            <!-- <div class="mb-4">
-              <label for="add-category" class="block mb-2 font-semibold text-gray-700">
-                Category:
-              </label>
-              <select
-                id="add-category"
-                v-model="currentPlaces.category_id"
-                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option disabled value="">Select a category</option>
-                <option v-for="category in categories" :key="category.id" :value="category.id">
-                  {{ category.categories_name }}
-                </option>
-              </select>
-            </div> -->
-
             <div class="mb-4">
-              <label for="add-image-link" class="block mb-2 font-semibold text-gray-700">
-                Image Link:
-              </label>
-              <textarea
-                id="add-image-link"
-                v-model="currentPlaces.image_link"
-                type="text"
-                rows="1"
-                @input="adjustHeight"
-                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter image link (optional)"
-              ></textarea>
-            </div>
+              <label class="block mb-2 font-semibold text-gray-700"> Images: </label>
 
-            <div class="mb-4">
-              <label for="add-image-detail" class="block mb-2 font-semibold text-gray-700">
-                Image Detail:
-              </label>
-              <textarea
-                id="add-image-detail"
-                v-model="currentPlaces.image_detail"
-                type="text"
-                rows="1"
-                @input="adjustHeight"
-                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter image_detail (optional)"
-              ></textarea>
+              <div v-for="(image, index) in currentPlaces.images" :key="index" class="flex items-center space-x-2 mb-4">
+
+                <input
+                  v-model="image.image_link"
+                  type="text"
+                  class="w-full p-2 border border-gray-300 rounded-lg"
+                  placeholder="Enter image link"
+                />
+                <input
+                  v-model="image.image_detail"
+                  type="text"
+                  class="w-full p-2 border border-gray-300 rounded-lg"
+                  placeholder="Enter image detail"
+                />
+                <BaseButton color="danger" small :icon="mdiTrashCanOutline" @click="removeImage(index)" />
+              </div>
+
+              <!-- แยกปุ่มให้อยู่ด้านล่าง -->
+              <div class="flex justify-start mt-4">
+                <BaseButton color="primary" small label="+ Add Image" @click="addImage" />
+              </div>
             </div>
 
             <div class="flex justify-center space-x-2">
@@ -427,14 +379,14 @@
 </template>
 
 <script setup>
-import { mdiTableBorder, mdiPencil, mdiTrashCan, mdiPlus } from '@mdi/js'
+import { mdiTableBorder, mdiPencil, mdiTrashCan, mdiPlus,mdiTrashCanOutline } from '@mdi/js'
 import SectionMain from '@/components/SectionMain.vue'
 import CardBox from '@/components/CardBox.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
 import SectionTitleLineWithButton from '@/components/SectionTitleLineWithButton.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import CardBoxModal from '@/components/CardBoxModal.vue'
-import { computed, ref,onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { usePlacesStore } from '@/stores/modules/places'
 import Swal from 'sweetalert2'
 // import { useCategoriesStore } from '@/stores/modules/categories'
@@ -442,8 +394,6 @@ import Swal from 'sweetalert2'
 const store = usePlacesStore()
 const isAddModalActive = ref(false)
 const isEditModalActive = ref(false)
-// const categoriesStore = useCategoriesStore()
-// const categories = computed(() => categoriesStore.categories)
 
 const currentPlaces = ref({
   name: '',
@@ -452,17 +402,10 @@ const currentPlaces = ref({
   opening_hours: '',
   address: '',
   contact_link: '',
-  image_link: '',
-  image_detail: ''
+  images: [] // ✅ ตรวจสอบให้แน่ใจว่า images เป็น array ตั้งแต่เริ่ม
 })
 
 const places = computed(() => store.places)
-
-// onMounted(() => {
-//   Promise.all([categoriesStore.fetchCategories(), store.fetchPlaces()]).catch((error) => {
-//     console.error('Error fetching data:', error)
-//   })
-// })
 
 onMounted(() => {
   store.fetchPlaces()
@@ -477,9 +420,7 @@ function openAddModal() {
     opening_hours: '',
     address: '',
     contact_link: '',
-    image_link: '',
-    category_id: '',
-    image_detail: ''
+    images: [] // ✅ ตั้งค่า images ให้เป็น array เสมอ
   }
 }
 
@@ -498,68 +439,68 @@ function closeEditModal() {
 
 function isValidURL(url) {
   const pattern = new RegExp(
-    "^(https?:\\/\\/)?" + // ตรวจสอบ http:// หรือ https://
-    "((([a-zA-Z0-9$_.+!*'(),-]+\\.)+[a-zA-Z]{2,})|" + // โดเมนหลัก เช่น google.com
-    "((\\d{1,3}\\.){3}\\d{1,3}))" + // หรือเป็น IP เช่น 192.168.1.1
-    "(\\:\\d+)?(\\/[-a-zA-Z0-9%_.~+]*)*" + // พอร์ตและ path
-    "(\\?[;&a-zA-Z0-9%_.~+=-]*)?" + // query string
-    "(\\#[-a-zA-Z0-9_]*)?$", // fragment
-    "i"
-  );
-  return !!pattern.test(url);
+    '^(https?:\\/\\/)?' + // ตรวจสอบ http:// หรือ https://
+      "((([a-zA-Z0-9$_.+!*'(),-]+\\.)+[a-zA-Z]{2,})|" + // โดเมนหลัก เช่น google.com
+      '((\\d{1,3}\\.){3}\\d{1,3}))' + // หรือเป็น IP เช่น 192.168.1.1
+      '(\\:\\d+)?(\\/[-a-zA-Z0-9%_.~+]*)*' + // พอร์ตและ path
+      '(\\?[;&a-zA-Z0-9%_.~+=-]*)?' + // query string
+      '(\\#[-a-zA-Z0-9_]*)?$', // fragment
+    'i'
+  )
+  return !!pattern.test(url)
 }
 
 async function saveAdd() {
   if (!currentPlaces.value.name) {
     Swal.fire({
-      icon: "warning",
-      title: "Please enter the place name",
+      icon: 'warning',
+      title: 'Please enter the place name',
       text: 'The "Place Name" field is required',
-      confirmButtonText: "OK",
-      confirmButtonColor: "#0277bd",
-    });
-    return;
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#0277bd'
+    })
+    return
   }
 
   if (currentPlaces.value.contact_link && !isValidURL(currentPlaces.value.contact_link)) {
     Swal.fire({
-      icon: "error",
-      title: "Invalid Contact Link",
-      text: "กรุณากรอกลิงก์ที่ถูกต้อง เช่น https://example.com",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#FF5722",
-    });
-    return;
+      icon: 'error',
+      title: 'Invalid Contact Link',
+      text: 'กรุณากรอกลิงก์ที่ถูกต้อง เช่น https://example.com',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#FF5722'
+    })
+    return
   }
 
   // ตรวจสอบ image_link
   if (currentPlaces.value.image_link && !isValidURL(currentPlaces.value.image_link)) {
     Swal.fire({
-      icon: "error",
-      title: "Invalid Image Link",
-      text: "กรุณากรอกลิงก์ที่ถูกต้อง เช่น https://example.com/image.jpg",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#FF5722",
-    });
-    return;
+      icon: 'error',
+      title: 'Invalid Image Link',
+      text: 'กรุณากรอกลิงก์ที่ถูกต้อง เช่น https://example.com/image.jpg',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#FF5722'
+    })
+    return
   }
 
   try {
-    await store.addPlaces(currentPlaces.value);
+    await store.addPlaces(currentPlaces.value)
     Swal.fire({
-      icon: "success",
-      title: "Saved!",
-      text: "Your place has been added successfully.",
+      icon: 'success',
+      title: 'Saved!',
+      text: 'Your place has been added successfully.',
       timer: 1500,
-      showConfirmButton: false,
-    });
-    closeAddModal();
+      showConfirmButton: false
+    })
+    closeAddModal()
   } catch (error) {
     Swal.fire({
-      icon: "error",
-      title: "Error!",
-      text: error.response ? error.response.data : "There was a problem adding the place.",
-    });
+      icon: 'error',
+      title: 'Error!',
+      text: error.response ? error.response.data : 'There was a problem adding the place.'
+    })
   }
 }
 
@@ -574,25 +515,25 @@ async function saveEdit() {
   }
   if (currentPlaces.value.contact_link && !isValidURL(currentPlaces.value.contact_link)) {
     Swal.fire({
-      icon: "error",
-      title: "Invalid Contact Link",
-      text: "กรุณากรอกลิงก์ที่ถูกต้อง เช่น https://example.com",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#FF5722",
-    });
-    return;
+      icon: 'error',
+      title: 'Invalid Contact Link',
+      text: 'กรุณากรอกลิงก์ที่ถูกต้อง เช่น https://example.com',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#FF5722'
+    })
+    return
   }
 
   // ตรวจสอบ image_link
   if (currentPlaces.value.image_link && !isValidURL(currentPlaces.value.image_link)) {
     Swal.fire({
-      icon: "error",
-      title: "Invalid Image Link",
-      text: "กรุณากรอกลิงก์ที่ถูกต้อง เช่น https://example.com/image.jpg",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#FF5722",
-    });
-    return;
+      icon: 'error',
+      title: 'Invalid Image Link',
+      text: 'กรุณากรอกลิงก์ที่ถูกต้อง เช่น https://example.com/image.jpg',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#FF5722'
+    })
+    return
   }
 
   try {
@@ -647,6 +588,23 @@ function confirmDelete(id) {
         })
     }
   })
+}
+
+function addImage() {
+  if (!Array.isArray(currentPlaces.value.images)) {
+    console.warn('🔴 currentPlaces.images is not an array. Initializing...')
+    currentPlaces.value.images = []
+  }
+
+  console.log('📸 Adding new image slot')
+  currentPlaces.value.images.push({ image_link: '', image_detail: '' })
+  console.log('✅ Updated images:', currentPlaces.value.images)
+}
+
+function removeImage(index) {
+  console.log('🗑 Removing image slot at index:', index)
+  currentPlaces.value.images.splice(index, 1)
+  console.log('✅ Updated images:', currentPlaces.value.images)
 }
 
 function adjustHeight(event) {

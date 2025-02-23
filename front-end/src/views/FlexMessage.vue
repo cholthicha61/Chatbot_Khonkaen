@@ -26,7 +26,7 @@
                 <th class="px-4 py-2 text-left">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody v-if="Array.isArray(flextourist) && flextourist.length > 0">
               <tr v-for="(flextourist, index) in flextourist" :key="flextourist.id">
                 <td>{{ index + 1 }}</td>
                 <td :class="!flextourist.tourist_name ? 'text-red-500' : ''">
@@ -34,13 +34,13 @@
                 </td>
                 <td>
                   {{
-                    places.length > 0
-                      ? places.find((place) => place.id === flextourist.place_id)?.name ||
+                    (places?.length ?? 0) > 0
+                      ? places.find((place) => place.id === flextourist?.place_id)?.name ||
                         'No place selected'
                       : 'Loading places...'
                   }}
                 </td>
-                
+
                 <td>{{ formatDate(flextourist.created_at) }}</td>
                 <td>
                   <BaseButton
@@ -137,13 +137,13 @@
             </div>
 
             <!-- Dropdown for Place Selection -->
-            <div class="mb-4">
-              <label for="edit-place" class="block mb-2 font-semibold text-gray-700">
-                Select Place:
+            <div v-for="(place, index) in currentFlextourist.places" :key="index" class="mb-4">
+              <label :for="'edit-place-' + index" class="block mb-2 font-semibold text-gray-700">
+                Select Place {{ index + 1 }}:
               </label>
               <select
-                id="edit-place"
-                v-model="currentFlextourist.place_id"
+                :id="'edit-place' + index"
+                v-model="currentFlextourist.places[index].place_id"
                 class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="" disabled>Select a place</option>
@@ -159,8 +159,13 @@
                 color="info"
                 type="submit"
                 label="Save"
-                :disabled="!currentFlextourist.place_id"
+                :disabled="
+                  !currentFlextourist.places ||
+                  currentFlextourist.places.length === 0 ||
+                  currentFlextourist.places.some((place) => !place.place_id)
+                "
               />
+
               <BaseButton color="danger" label="Cancel" @click="closeEditModal" />
             </div>
           </form>
@@ -186,13 +191,13 @@ import { usePlacesStore } from '@/stores/modules/places'
 const store = useFlexTouristStore()
 const isAddModalActive = ref(false)
 const isEditModalActive = ref(false)
-const flextourist = computed(() => store.flextourist)
+const flextourist = computed(() => store.flextourist || [])
 const places = ref([])
 const placesStore = usePlacesStore()
 
 const currentFlextourist = ref({
   tourist_name: '',
-  places: [{ place_id: '' }]
+  places: [{ place_id: null }]
 })
 
 function addPlaceField() {
@@ -202,13 +207,13 @@ function addPlaceField() {
 onMounted(async () => {
   try {
     await store.fetchFlexTourist()
-    console.log('flextourist in Component:', flextourist.value)
+    // console.log('📌 Flextourist data (after fetch):', JSON.stringify(flextourist.value, null, 2))
 
     await placesStore.fetchPlaces()
     places.value = placesStore.places
-    console.log('Loaded places:', places.value)
+    // console.log('📌 Loaded places:', JSON.stringify(places.value, null, 2))
   } catch (error) {
-    console.error('Error during onMounted:', error)
+    console.error('❌ Error during onMounted:', error)
   }
 })
 
@@ -221,14 +226,23 @@ function openAddModal() {
 }
 
 function openEditModal(flextourist) {
-  console.log('Editing Flextourist:', flextourist)
-  isEditModalActive.value = true
+  console.log('✏️ Editing Flextourist:', flextourist);
+
+  isEditModalActive.value = true;
+
   currentFlextourist.value = {
-    id: flextourist.tourist_id,
-    tourist_name: flextourist.tourist_name,
-    place_id: flextourist.place_id
-  }
+    id: flextourist.tourist_id || null,
+    tourist_name: flextourist.tourist_name || '',
+    places: Array.isArray(flextourist.places) && flextourist.places.length > 0
+      ? flextourist.places.map(place => ({
+          place_id: Number(place.place_id) || null // ✅ ทำให้เป็น object เสมอ
+        }))
+      : [{ place_id: Number(flextourist.place_id) || null }] // ✅ รองรับกรณีที่ `place_id` อยู่นอก `places`
+  };
+
+  console.log('📋 Current Flextourist (Edit):', JSON.stringify(currentFlextourist.value, null, 2));
 }
+
 
 function closeAddModal() {
   isAddModalActive.value = false
@@ -251,32 +265,31 @@ async function saveAdd() {
       text: 'Flextourist Name is required.',
       confirmButtonColor: '#283593'
     })
+    return
+  }
 
+  // ตรวจสอบว่ามีอย่างน้อย 1 สถานที่
+  const placesToAdd = currentFlextourist.value.places
+    .filter((place) => place.place_id)
+    .map((place) => place.place_id)
+
+  if (placesToAdd.length === 0) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Validation Error',
+      text: 'Please select at least one place.'
+    })
     return
   }
 
   try {
-    // กรองเฉพาะสถานที่ที่กรอกข้อมูลไว้ (ไม่ใช่ค่าว่าง)
-    const placesToAdd = currentFlextourist.value.places.filter((place) => place.place_id)
-
-    if (placesToAdd.length === 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Validation Error',
-        text: 'Please select at least one place.'
-      })
-      return
-    }
-
-    // ส่งข้อมูลเฉพาะสถานที่ที่กรอก
-    const promises = placesToAdd.map((place) =>
-      store.addFlexTourist({
+    // ส่ง `place_id` เป็น Array
+    for (const place_id of placesToAdd) {
+      await store.addFlexTourist({
         tourist_name: currentFlextourist.value.tourist_name.trim(),
-        place_id: place.place_id
+        place_id // ✅ ส่ง place_id ทีละตัว
       })
-    )
-
-    await Promise.all(promises)
+    }
 
     Swal.fire({
       icon: 'success',
@@ -287,7 +300,7 @@ async function saveAdd() {
     })
 
     closeAddModal()
-    await store.fetchFlexTourist() // Refresh the list
+    await store.fetchFlexTourist()
   } catch (error) {
     console.error('Error adding flextourist:', error)
     Swal.fire({
@@ -299,38 +312,34 @@ async function saveAdd() {
 }
 
 async function saveEdit() {
-  console.log('Saving Flextourist:', currentFlextourist.value) // ตรวจสอบค่าปัจจุบัน
+  console.log('🔄 Updating FlexTourist:', currentFlextourist.value);
+  console.log('🔄 [saveEdit] Attempting to update:', JSON.stringify(currentFlextourist.value, null, 2));
 
   if (!currentFlextourist.value.id) {
-    console.error('FlexTourist ID is required for updating.')
-    return
+    console.error('❌ Error: FlexTourist ID is required for updating.');
+    return;
   }
 
-  if (!currentFlextourist.value.tourist_name.trim()) {
+  const placesToUpdate =
+    currentFlextourist.value.places?.filter((place) => place.place_id)?.map((place) => place.place_id) || [];
+
+  console.log('📤 Places to update:', placesToUpdate);
+
+  if (placesToUpdate.length === 0) {
     Swal.fire({
       icon: 'warning',
       title: 'Validation Error',
-      text: 'Flextourist Name is required.',
-      confirmButtonColor: '#283593'
-    })
-    return
-  }
-
-  if (!currentFlextourist.value.place_id) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Validation Error',
-      text: 'Please select a place.'
-    })
-    return
+      text: 'Please select at least one place.'
+    });
+    return;
   }
 
   try {
     await store.updateFlexTourist({
-      id: currentFlextourist.value.id, // ตรวจสอบว่ามีค่า ID
+      id: currentFlextourist.value.id,
       tourist_name: currentFlextourist.value.tourist_name.trim(),
-      place_id: currentFlextourist.value.place_id
-    })
+      places: placesToUpdate
+    });
 
     Swal.fire({
       icon: 'success',
@@ -338,22 +347,21 @@ async function saveEdit() {
       text: 'The Flextourist has been updated successfully.',
       timer: 2000,
       showConfirmButton: false
-    })
+    });
 
-    closeEditModal()
-    await store.fetchFlexTourist() // รีเฟรชข้อมูล
+    closeEditModal();
+    await store.fetchFlexTourist();
   } catch (error) {
-    console.error('Error updating flextourist:', error)
+    console.error('❌ Error updating flextourist:', error);
     Swal.fire({
       icon: 'error',
       title: 'Error',
       text: error.response?.data || 'An error occurred while updating the flextourist.'
-    })
+    });
   }
 }
 
-function confirmDelete(tourist_id) {
-  console.log('Tourist ID to delete:', tourist_id)
+async function confirmDelete(tourist_id) {
   if (!tourist_id) {
     Swal.fire({
       icon: 'error',

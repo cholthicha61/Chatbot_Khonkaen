@@ -196,9 +196,9 @@ const saveWebAnswer = async (
     `;
     const values = [
       placeName,
-      finalAnswerText, // ใช้เฉพาะข้อความรายละเอียด
+      finalAnswerText, 
       intentType,
-      finalImageUrl, // ✅ ใช้ค่าที่ตรวจสอบแล้ว
+      finalImageUrl, 
       imageDescription || "ไม่มีรายละเอียดรูปภาพ",
       contactLink || "ไม่มีข้อมูลติดต่อ",
     ];
@@ -795,7 +795,7 @@ const fetchHTMLAndSaveToJSON6 = async (url, outputFilePath) => {
         สถานที่: locationName,
         รูปภาพ: listImg.length > 0 ? listImg : "ไม่มีรูปภาพ",
         รายละเอียดรูปภาพ:
-          imageDetails || "ขอบคุณรูปภาพจาก : เว็บไซต์ tripgether.com",
+          imageDetails || "ขอบคุณรูปภาพจาก : tripgether ทริปเก็ทเตอร์ จาก  tripgether.com",
         รายละเอียด: locationDetail,
         ข้อมูลที่ค้นพบ: listItems,
       });
@@ -1812,36 +1812,39 @@ const getAnswerForIntent = async (intentName, placeName, dbClient) => {
       const contactLink =
         result.rows[0].contact_link || "ไม่พบข้อมูลช่องทางการติดต่อสถานที่";
 
-      const filteredAnswer = {
-        fee: null,
-        contact: null,
-        openingHours: null,
-        contact_link: null,
-        other: null,
-      };
+        const filteredAnswer = {
+          address: null,
+          fee: null,
+          contact: null,
+          openingHours: null,
+          contact_link: null,
+          other: null,
+        };
+  
 
-      if (intentName === "ค่าธรรมเนียมการเข้า") {
-        filteredAnswer.fee = answerText
-          ? answerText.trim()
-          : "ไม่พบข้อมูลค่าธรรมเนียมการเข้า";
-      } else if (intentName === "เส้นทางไปยังสถานที่") {
-        filteredAnswer.path = answerText
-          ? answerText.trim()
-          : "ไม่พบข้อมูลเส้นทางไปยังสถานที่";
-      } else if (intentName === "เวลาเปิดทำการ") {
-        filteredAnswer.openingHours = answerText
-          ? answerText.trim()
-          : "ไม่พบข้อมูลเวลาเปิดทำการ";
-      } else if (intentName === "ช่องทางการติดต่อ") {
-        filteredAnswer.contact_link = answerText
-          ? answerText.trim()
-          : "ไม่พบข้อมูลช่องทางการติดต่อสถานที่";
-      } else if (intentName === "รายละเอียด") {
-        filteredAnswer.detail = answerText
-          ? answerText.trim()
-          : "ไม่พบข้อมูลรายละเอียด";
-        filteredAnswer.contact_link = contactLink;
-      }
+        if (intentName === "ค่าธรรมเนียมการเข้า") {
+          filteredAnswer.fee = answerText
+            ? answerText.trim()
+            : "ไม่พบข้อมูลค่าธรรมเนียมการเข้า";
+        } else if (intentName === "เส้นทางไปยังสถานที่") {
+          filteredAnswer.address = answerText
+            ? answerText.trim()
+            : "ไม่พบข้อมูลเส้นทางไปยังสถานที่";
+        } else if (intentName === "เวลาเปิดทำการ") {
+          filteredAnswer.openingHours = answerText
+            ? answerText.trim()
+            : "ไม่พบข้อมูลเวลาเปิดทำการ";
+        } else if (intentName === "ช่องทางการติดต่อ") {
+          filteredAnswer.contact_link = answerText
+            ? answerText.trim()
+            : "ไม่พบข้อมูลช่องทางการติดต่อสถานที่";
+        } else if (intentName === "รายละเอียด") {
+          filteredAnswer.detail = answerText
+            ? answerText.trim()
+            : "ไม่พบข้อมูลรายละเอียด";
+          filteredAnswer.contact_link = contactLink;
+        }
+  
 
       console.log("Filtered answer:", filteredAnswer);
 
@@ -2072,31 +2075,64 @@ const createFlexDetailMessage = (
   }
 };
 
-const fetchImageData = async (query, params, dbClient) => {
+const createFlexDatabaseDetailMessage = (placeName, imageUrls, answerText, imageDetail, contact_link) => {
   try {
-    if (!dbClient) {
-      console.error("⛔ Database client is not initialized.");
-      return null;
+    const defaultImageUrl = "https://cloud-atg.moph.go.th/quality/sites/default/files/default_images/default.png";
+
+    // ถ้าไม่มีภาพให้ใช้รูป default
+    if (!Array.isArray(imageUrls) || imageUrls.length === 0) {
+      imageUrls = [defaultImageUrl];
     }
 
-    const { rows } = await dbClient.query(query, params);
-    if (!rows || rows.length === 0) {
-      console.warn("⚠️ No results found for query:", query);
-      return null;
-    }
+    // 🔹 Hero Message (ข้อความรายละเอียด)
+    const textBubble = {
+      type: "bubble",
+      body: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "text",
+            text: answerText || "ไม่มีรายละเอียดเพิ่มเติม",
+            wrap: true,
+            size: "md",
+            weight: "regular"
+          },
+          {
+            type: "text",
+            text: `ที่มา: ${imageDetail || "ไม่ระบุ"}`, // 🔥 ใช้ imageDetail เป็นที่มา
+            wrap: true,
+            size: "sm",
+            color: "#aaaaaa",
+            margin: "md"
+          }
+        ]
+      }
+    };
 
-    console.log(
-      "✅ Query result fetchImageData :",
-      JSON.stringify(rows[0], null, 2)
-    );
-    return rows[0]; // Return the first result
+    // 🔹 Image Gallery (แสดงรูปภาพแนวนอน)
+    const imageBubbles = imageUrls.map((img) => ({
+      type: "bubble",
+      hero: {
+        type: "image",
+        url: img,
+        size: "full",
+        aspectRatio: "16:9",
+        aspectMode: "cover"
+      }
+    }));
+
+    return {
+      type: "carousel",
+      contents: [textBubble, ...imageBubbles] // ใส่ข้อความเป็นบับเบิลแรก ตามด้วยรูปภาพ
+    };
   } catch (error) {
-    console.error("❌ Error fetching image data:", error);
+    console.error("❌ Error creating Flex Message:", error);
     return null;
   }
 };
 
-const sendImageDatailMessage = async (
+const sendImageDatailMessage = async ( 
   placeName,
   dbClient,
   questionText,
@@ -2119,21 +2155,25 @@ const sendImageDatailMessage = async (
     }
 
     const query = `
-      SELECT id, description, image_link, image_detail, name, contact_link
-      FROM places
+      SELECT p.id, p.name, p.description, p.contact_link, 
+             ARRAY_REMOVE(ARRAY_AGG(pi.image_link), NULL) AS image_links,
+             ARRAY_REMOVE(ARRAY_AGG(pi.image_detail), NULL) AS image_details
+      FROM places p
+      LEFT JOIN place_images pi ON p.id = pi.place_id
       WHERE 
-        REGEXP_REPLACE(LOWER(name), '[^ก-๙a-z0-9]', '', 'g') 
+        REGEXP_REPLACE(LOWER(p.name), '[^ก-๙a-z0-9]', '', 'g') 
         ILIKE '%' || REGEXP_REPLACE(LOWER($1), '[^ก-๙a-z0-9]', '', 'g') || '%'
-        OR REGEXP_REPLACE(LOWER(name), '[^ก-๙a-z0-9 ]', '', 'g') 
+        OR REGEXP_REPLACE(LOWER(p.name), '[^ก-๙a-z0-9 ]', '', 'g') 
         ILIKE '%' || REGEXP_REPLACE(LOWER($1), '[^ก-๙a-z0-9 ]', '', 'g') || '%'
-      ORDER BY LENGTH(name) ASC
+      GROUP BY p.id
+      ORDER BY LENGTH(p.name) ASC
       LIMIT 1;
     `;
 
     const placeData = await fetchImageData(query, [placeName], dbClient);
     if (!placeData) {
       console.warn(`⚠️ No data found in Database for ${placeName}`);
-      // ถ้าไม่มีใน Database → ไปดึงจาก Web Answer (`web_answer`)
+      
       return await sendImageWebDetailMessage(
         placeName,
         dbClient,
@@ -2145,21 +2185,25 @@ const sendImageDatailMessage = async (
 
     console.log(`✅ Found place in Database: "${placeData.name}"`);
 
-    const imageUrls = placeData.image_link
-      ? placeData.image_link.split(",").map((url) => url.trim())
-      : [];
+    // ปรับให้รองรับหลายภาพ
+    const imageUrls = placeData.image_links && placeData.image_links.length > 0
+      ? placeData.image_links
+      : ["https://cloud-atg.moph.go.th/quality/sites/default/files/default_images/default.png"];
 
-    // ✅ ใช้ description จาก Database เท่านั้น
-    const answerText =
-      placeData.description && placeData.description.trim() !== ""
-        ? placeData.description
-        : "ไม่มีรายละเอียดเพิ่มเติม";
+    // ดึงที่มาของภาพ ถ้ามีหลายรายการ ให้รวมกัน
+    const imageDetail = placeData.image_details && placeData.image_details.length > 0
+      ? placeData.image_details.join(", ")
+      : "ไม่ระบุ";
 
-    const flexMessage = createFlexDetailMessage(
+    const answerText = placeData.description && placeData.description.trim() !== ""
+      ? placeData.description
+      : "ไม่มีรายละเอียดเพิ่มเติม";
+
+    const flexMessage = createFlexDatabaseDetailMessage(
       placeData.name,
       imageUrls,
       answerText,
-      placeData.image_detail,
+      imageDetail, // 🔥 ส่งที่มาเข้าไป
       placeData.contact_link
     );
 
@@ -2189,6 +2233,30 @@ const sendImageDatailMessage = async (
     console.error("❌ Error in sendImageDatailMessage:", error);
     agent.add("ขออภัย, เกิดข้อผิดพลาดขณะประมวลผลข้อมูลของคุณ.");
     return false;
+  }
+};
+
+const fetchImageData = async (query, params, dbClient) => {
+  try {
+    if (!dbClient) {
+      console.error("⛔ Database client is not initialized.");
+      return null;
+    }
+
+    const { rows } = await dbClient.query(query, params);
+    if (!rows || rows.length === 0) {
+      console.warn("⚠️ No results found for query:", query);
+      return null;
+    }
+
+    console.log(
+      "✅ Query result fetchImageData :",
+      JSON.stringify(rows[0], null, 2)
+    );
+    return rows[0]; // Return the first result
+  } catch (error) {
+    console.error("❌ Error fetching image data:", error);
+    return null;
   }
 };
 
@@ -2284,7 +2352,7 @@ const sendImageWebDetailMessage = async (
   }
 };
 
-const getEventsByMonth = async (month, dbClient) => {
+const getEventsByMonth = async (month, dbClient) => {  
   try {
     const monthMap = {
       มกรา: "มกราคม",
@@ -2301,55 +2369,39 @@ const getEventsByMonth = async (month, dbClient) => {
       ธันวา: "ธันวาคม",
     };
 
+    month = month.trim();
     if (monthMap[month]) {
       month = monthMap[month];
     }
 
-    if (!month.startsWith("เดือน")) {
-      month = `เดือน${month}`;
-    }
+    const plainMonth = month.replace("เดือน", "").trim();
+    console.log("📌 ค้นหาข้อมูลของเดือน:", month, "| แบบไม่ใส่ 'เดือน':", plainMonth);
 
-    const query = `SELECT * FROM event WHERE event_month ILIKE $1 ORDER BY start_time ASC`;
-    const values = [`${month}`];
+    const query = `SELECT * FROM event WHERE event_month ILIKE ANY(ARRAY[$1, $2, $3]) ORDER BY activity_time ASC`;
+    const values = [`%${month}%`, `%เดือน${month}%`, `%${month.slice(0, 3)}%`];
+    console.log("📌 Querying database with:", values);
+
 
     const { rows } = await dbClient.query(query, values);
 
+    console.log("📌 อีเวนต์ที่พบทั้งหมดจากฐานข้อมูล:", rows.length);
+    console.log("📌 รายละเอียดอีเวนต์ที่ได้:", JSON.stringify(rows, null, 2));
+
     if (rows.length === 0) {
-      return `❌ ไม่พบอีเวนต์ในเดือน ${month}`;
+      return [];
     }
 
-    let response = `📅 อีเวนต์ในเดือน ${month}:\n\n`;
-    rows.forEach((event, index) => {
-      const startDate = event.start_time
-        ? new Date(event.start_time).toLocaleDateString("th-TH", {
-            timeZone: "Asia/Bangkok",
-          })
-        : "ไม่ระบุ";
-
-      const endDate = event.end_time
-        ? new Date(event.end_time).toLocaleDateString("th-TH", {
-            timeZone: "Asia/Bangkok",
-          })
-        : "ไม่ระบุ";
-
-      const location =
-        event.address && event.address !== "No data available"
-          ? event.address
-          : "ไม่ได้ระบุ";
-      const description =
-        event.description && event.description !== "No data available"
-          ? event.description
-          : "ไม่มีรายละเอียดเพิ่มเติม";
-
-      response += `${index + 1}. ${
-        event.event_name
-      }\n📅 วันที่: ${startDate} - ${endDate}\n📍 สถานที่: ${location}\nℹ️ รายละเอียด: ${description}\n\n`;
-    });
-
-    return response;
+    return rows.map((event) => ({
+      event_name: event.event_name,
+      activity_time: event.activity_time || "ไม่ระบุ",
+      address: event.address || "ไม่ระบุ",
+      description: event.description || "ไม่มีรายละเอียดเพิ่มเติม",
+      image: event.image_link,
+      imageSource: event.image_detail,
+    }));
   } catch (error) {
-    console.error("Error fetching events by month:", error);
-    return "⚠️ เกิดข้อผิดพลาดในการดึงข้อมูลอีเวนต์";
+    console.error("❌ Error fetching events by month:", error);
+    return [];
   }
 };
 
@@ -2357,125 +2409,204 @@ const getEventByName = async (eventName, dbClient) => {
   try {
     console.log("📌 กำลังค้นหาอีเว้นต์:", eventName);
 
-    const query = `SELECT * FROM event WHERE LOWER(event_name) ILIKE LOWER($1) LIMIT 1`;
+    const query = `SELECT * FROM event WHERE event_name ILIKE $1 LIMIT 1`;
     const values = [`%${eventName.trim()}%`];
-
-    console.log("📌 ค่าที่ Query:", values);
 
     const { rows } = await dbClient.query(query, values);
 
     if (rows.length === 0) {
-      return `❌ ไม่พบข้อมูลเกี่ยวกับอีเวนต์ "${eventName}"`;
+      return null;
     }
 
     const event = rows[0];
-
-    const startDate = event.start_time
-      ? new Date(event.start_time).toLocaleDateString("th-TH")
-      : "ไม่ระบุ";
-
-    const endDate = event.end_time
-      ? new Date(event.end_time).toLocaleDateString("th-TH")
-      : "ไม่ระบุ";
-
-    const location =
-      event.address && event.address !== "No data available"
-        ? event.address
-        : "ไม่ได้ระบุ";
-
-    const description =
-      event.description && event.description !== "No data available"
-        ? event.description
-        : "ไม่มีรายละเอียดเพิ่มเติม";
-
-    return `🎉 รายละเอียดของ ${event.event_name}:\n\n📅 วันที่: ${startDate} - ${endDate}\n📍 สถานที่: ${location}\nℹ️ รายละเอียด: ${description}`;
+    return {
+      event_name: event.event_name,
+      activity_time: event.activity_time || "ไม่ระบุ",
+      address: event.address || "ไม่ระบุ",
+      description: event.description || "ไม่มีรายละเอียดเพิ่มเติม",
+      image: event.image_link,
+      imageSource: event.image_detail,
+    };
   } catch (error) {
     console.error("❌ Error fetching event by name:", error);
-    return "⚠️ เกิดข้อผิดพลาดในการดึงข้อมูลอีเวนต์";
+    return null;
   }
 };
 
 const eventInMonth = async (agent, dbClient) => {
-  const questionText = agent.request_.body.queryResult.queryText;
-  const lineId = agent.originalRequest.payload.data.source?.userId;
-  let responseMessage = "";
-  let sourceType = "database";
-  let eventId = null; // ✅ กำหนดค่าเริ่มต้นให้ eventId
-
   try {
+    const questionText = agent.request_.body.queryResult.queryText;
+    const lineId = agent.originalRequest.payload.data.source?.userId;
+    let events = [];
+    let sourceType = "database";
+    let eventId = null;
+    let month = agent.request_.body.queryResult.parameters.month || null;
+    let eventName = null;
+    let dataFound = false;
+
     console.log("📌 ข้อความที่ได้รับ:", questionText);
+    console.log("📌 ค่าเดือนจากพารามิเตอร์:", month);
 
     if (!dbClient) {
       console.error("❌ Database client is not defined.");
-      agent.add(
-        "⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล กรุณาลองใหม่อีกครั้ง."
-      );
+      agent.add("⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล กรุณาลองใหม่อีกครั้ง.");
       return;
     }
 
-    const eventMatch = questionText.match(
-      /(?:งาน|อีเว้นต์|เทศกาล|วัน|กิจกรรม)?\s*([\p{L}\d]+)/iu
-    );
-    let eventName = eventMatch ? eventMatch[1].trim() : null;
-    let dataFound = false;
+    const eventMatch = questionText.match(/(?:งาน|อีเว้นต์|เทศกาล|วัน|กิจกรรม)?\s*([\p{L}\d]+)/iu);
+    if (eventMatch && eventMatch[1].trim().length > 2) {
+        eventName = eventMatch[1].trim();
+    }
+    
 
-    if (eventName) {
-      console.log("📌 ค้นหาอีเว้นต์:", eventName);
-      responseMessage = await getEventByName(eventName, dbClient);
-      if (!responseMessage.includes("❌ ไม่พบข้อมูล")) {
+    // ✅ ถามหาอีเว้นต์เฉพาะชื่อ → ค้นหาชื่ออีเว้นต์โดยตรง
+    if (eventName && !month) {
+      console.log("📌 ค้นหาอีเว้นต์โดยใช้ชื่อ:", eventName);
+      const event = await getEventByName(eventName, dbClient);
+      if (event) {
         dataFound = true;
+        events = [event];
       }
     }
 
+    // ✅ ถามหา "เดือนนี้" → ใช้เดือนปัจจุบัน
     if (!dataFound) {
-      let month = agent.request_.body.queryResult.parameters.month || null;
-
-      if (
-        !month ||
-        /เดือนนี้|อีเว้นต์ประจำเดือน|เดือนปัจจุบัน/i.test(questionText)
-      ) {
+      console.log("📌 ก่อนกำหนดค่า month:", month);
+      if (!month || /เดือนนี้|อีเว้นต์ประจำเดือน|ปัจจุบัน|เดือนปัจจุบัน/i.test(questionText)) {
         month = new Date().toLocaleString("th-TH", { month: "long" });
-      }
-
+        console.log("📌 ผู้ใช้ถาม 'เดือนนี้' → ใช้เดือนปัจจุบัน:", month);
+    }
+    
       console.log("📌 ค้นหาข้อมูลของเดือน:", month);
-
-      responseMessage = await getEventsByMonth(month, dbClient);
-
-      // ✅ หากค้นหาข้อมูลเดือนแล้วเจอ event ให้กำหนดค่า eventId
-      const eventData = await dbClient.query(
-        `SELECT id FROM event WHERE event_month ILIKE $1 LIMIT 1`,
-        [month]
-      );
-      if (eventData.rows.length > 0) {
-        eventId = eventData.rows[0].id;
-      }
+      events = await getEventsByMonth(month, dbClient);
     }
 
-    console.log("📌 ผลลัพธ์ที่ได้:", responseMessage);
-
-    if (dbClient) {
-      await saveConversation(
-        questionText,
-        responseMessage,
-        lineId,
-        null,
-        eventId, // ✅ ใช้ eventId ที่ได้จากฐานข้อมูล
-        sourceType,
-        null,
-        dbClient
-      );
-    } else {
-      console.warn(
-        "⚠️ Database client is not available. Skipping saveConversation."
-      );
+    if (events.length === 0) {
+      agent.add("❌ ไม่พบอีเวนต์ที่คุณกำลังค้นหา");
+      return;
     }
 
-    const payload = new Payload(
-      "LINE",
-      { type: "text", text: responseMessage },
-      { sendAsMessage: true }
+    console.log("📌 อีเวนต์ที่พบ:", events.length);
+
+    const extractedMonth =
+      events[0].activity_time?.match(/(\d+)\s(\S+)/)?.[2] || month;
+
+    let eventText = `📅 อีเวนต์ในเดือน ${extractedMonth}:\n\n`;
+
+    events.forEach((event, index) => {
+      eventText += `${index + 1}. ${event.event_name}\n`;
+      eventText += `📅 วันที่: ${event.activity_time}\n`;
+      eventText += `📍 สถานที่: ${event.address}\n`;
+      eventText += `ℹ️ รายละเอียด: ${event.description}\n`;
+      eventText += `🖼️ รูปภาพ: ${event.image}\n`;
+      eventText += `📌 ที่มารูป: ${event.imageSource}\n\n`;
+    });
+    eventText = eventText.trim();
+
+    await saveConversation(
+      questionText,
+      eventText,
+      lineId,
+      null,
+      eventId,
+      sourceType,
+      null,
+      dbClient
     );
-    agent.add(payload);
+
+    // ✅ แสดงผลอีเว้นต์ด้วย Flex Message
+    const flexMessages = [];
+    const batchSize = 5;
+
+    for (let i = 0; i < events.length; i += batchSize) {
+      const eventBatch = events.slice(i, i + batchSize);
+      const defaultImageUrl =
+        "https://cloud-atg.moph.go.th/quality/sites/default/files/default_images/default.png";
+
+      const bubbles = eventBatch.map((event) => ({
+        type: "bubble",
+        hero: {
+          type: "image",
+          url: event.image || defaultImageUrl,
+          size: "full",
+          aspectRatio: "1:1",
+          aspectMode: "cover",
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: `🔹 ${event.event_name || "ไม่ระบุชื่อกิจกรรม"}`,
+              weight: "bold",
+              size: "xl",
+              wrap: true,
+            },
+            {
+              type: "text",
+              text: `📅 วันที่: ${event.activity_time || "ไม่ระบุ"}`,
+              wrap: true,
+              margin: "md",
+              size: "sm",
+            },
+            {
+              type: "text",
+              text: `📍 สถานที่: ${event.address || "ไม่ระบุ"}`,
+              wrap: true,
+              margin: "md",
+              size: "sm",
+            },
+            {
+              type: "text",
+              text: `ℹ️ รายละเอียด: ${event.description || "ไม่มีรายละเอียดเพิ่มเติม"}`,
+              wrap: true,
+              margin: "md",
+              size: "sm",
+            },
+            {
+              type: "text",
+              text: `ขอบคุณรูปภาพจาก: ${event.imageSource || "ไม่มีที่มาของรูปภาพ"}`,
+              wrap: true,
+              margin: "md",
+              size: "sm",
+              color: "#aaaaaa",
+            },
+          ],
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          spacing: "sm",
+          contents: [
+            {
+              type: "button",
+              style: "link",
+              height: "sm",
+              action: {
+                type: "uri",
+                label: "ดูรายละเอียดรูปภาพเพิ่มเติม",
+                uri: event.image,
+              },
+            },
+          ],
+        },
+      }));
+
+      flexMessages.push({
+        type: "carousel",
+        contents: bubbles,
+      });
+    }
+
+    const payload = {
+      type: "flex",
+      altText: "รายการอีเวนต์",
+      contents: flexMessages[0],
+    };
+
+    agent.add(new Payload("LINE", payload, { sendAsMessage: true }));
+    console.log("✅ Flex Message Event sent to LINE successfully!");
   } catch (error) {
     console.error("❌ Error handling event intent:", error);
     agent.add("⚠️ เกิดข้อผิดพลาด กรุณาลองใหม่");
@@ -2491,7 +2622,6 @@ const normalizeSynonym = (placeName) => {
   return placeName;
 };
 
-// ✅ ทำความสะอาดชื่อสถานที่ และใช้ Synonym Mapping
 const cleanPlaceNameAPI = (placeName) => {
   const wordsToRemove = [
     "เที่ยวขอนแก่น",
@@ -2520,7 +2650,6 @@ const cleanPlaceNameAPI = (placeName) => {
 
   cleanedName = cleanedName.replace(/\s+/g, " ").trim();
 
-  // ✅ ใช้ชื่อที่แทนจาก Synonym Mapping ถ้ามี
   return normalizeSynonym(cleanedName.length > 0 ? cleanedName : placeName);
 };
 
@@ -2541,7 +2670,6 @@ const extractPlaceFromText = async (text, apiKey) => {
       let placeName = data.candidates[0].name;
       console.log("✅ Raw Place Name:", placeName);
 
-      // 🔥 ทำความสะอาดชื่อสถานที่ที่ได้จาก API
       placeName = cleanPlaceNameAPI(placeName);
       console.log("✨ Cleaned Place Name:", placeName);
 
@@ -2726,7 +2854,7 @@ const sendFlexMessageToUser = async (userId, flexMessage) => {
     messages: [
       {
         type: "flex",
-        altText: "ข้อมูล Flex Message",
+        altText: "Flex Message",
         contents: flexMessage,
       },
     ],
@@ -2875,9 +3003,7 @@ const synonymMap = {
     "โอปอ หมูกระทะ",
     "โอมายก้อน by โอปอ",
   ],
-  "Craft fe": ["Craft fe", "craft fe", "CraftFe", "craftfe"],
   "Columbo Craft Village": ["Columbo Craft Village", "Columbo Village"],
-
   "แจ่ม Cafe&Eatery": ["แจ่ม", "แจ่มคาเฟ่", "แจ่ม คาเฟ่"],
 };
 
@@ -3044,9 +3170,9 @@ const handleIntent = async (
         "โอปอ หมูกระทะ",
         "โอมายก้อน by โอปอ",
       ],
-      อุทยานแห่งชาติภูผาม่าน: ["ภูผาม่าน", "ภูผามาน"],
-      ป่าสนดงลาน: ["สวนสนดงลาน", "ป่าสน ดงลาน", "ดงลาน", "ป่าสนดงลาน ภูผาม่าน"],
-      ครัวสุพรรณิการ์: [
+      "อุทยานแห่งชาติภูผาม่าน": ["ภูผาม่าน", "ภูผามาน"],
+      "ป่าสนดงลาน": ["สวนสนดงลาน", "ป่าสน ดงลาน", "ดงลาน", "ป่าสนดงลาน ภูผาม่าน"],
+      "ครัวสุพรรณิการ์": [
         "Supanniga",
         "Supanniga Home",
         "ห้องทานข้าวสุพรรณิการ์",
@@ -3521,9 +3647,11 @@ const handleWebhookRequest = async (req, res, dbClient) => {
     intentMap.set("เที่ยวขอนแก่น", (agent) =>
       sendFlexMessageTourist(agent, "เที่ยวขอนแก่น", dbClient)
     );
-
     intentMap.set("ร้านอาหารในเมืองขอนแก่น", (agent) =>
       sendFlexMessageTourist(agent, "ร้านอาหารในเมืองขอนแก่น", dbClient)
+    );
+    intentMap.set("คาเฟ่ยอดฮิต", (agent) =>
+      sendFlexMessageTourist(agent, "คาเฟ่ยอดฮิต", dbClient)
     );
     intentMap.set("ร้านอาหารบุฟเฟ่", (agent) =>
       sendFlexMessageTourist(agent, "ร้านอาหารบุฟเฟ่", dbClient)
@@ -3531,8 +3659,20 @@ const handleWebhookRequest = async (req, res, dbClient) => {
     intentMap.set("อาหารระดับมิชลินไกด์", (agent) =>
       sendFlexMessageTourist(agent, "อาหารระดับมิชลินไกด์", dbClient)
     );
+    intentMap.set("ประเภทอาหารทั่วไป", (agent) =>
+      sendFlexMessageTourist(agent, "ประเภทอาหารทั่วไป", dbClient)
+    );
+    intentMap.set("ประเภทอาหารอินเตอร์", (agent) =>
+      sendFlexMessageTourist(agent, "ประเภทอาหารอินเตอร์", dbClient)
+    );
+    intentMap.set("ประเภทอาหารอีสาน", (agent) =>
+      sendFlexMessageTourist(agent, "ประเภทอาหารอีสาน", dbClient)
+    );
+    intentMap.set("ประเภทอาหารไทย", (agent) =>
+      sendFlexMessageTourist(agent, "ประเภทอาหารไทย", dbClient)
+    );
     intentMap.set("เส้นทางไปยังสถานที่", async (agent) => {
-      await sendLocationBasedOnQuestion(agent, dbClient);
+      await sendLocationBasedOnQuestion(agent, dbClient,location);
     });
 
     intentMap.set("ร้านอาหารดังยอดฮิต", async (agent) => {
@@ -3583,15 +3723,14 @@ const handleWebhookRequest = async (req, res, dbClient) => {
       }
     });
     if (!intentMap.has(displayName)) {
-      console.log("Intent not found, redirecting to Default Fallback Intent");
-      return handleIntent(
-        agent,
-        dbClient,
-        questionText,
-        location,
-        "Default Fallback Intent"
-      );
-    }
+      console.log("Intent not found, responding with Default Fallback Message.");
+      const fallbackMessage = "ขออภัย ฉันไม่เข้าใจคำถามของคุณ ลองถามใหม่อีกครั้งนะ 😊";
+      agent.add(fallbackMessage);
+      // ส่ง HTTP Response เพื่อให้ Webhook ปิดการทำงานอย่างสมบูรณ์
+      return res.json({
+          fulfillmentText: fallbackMessage,
+      });
+  }
 
     agent.handleRequest(intentMap);
   } catch (err) {
@@ -3604,29 +3743,22 @@ function removeLeadingNumbers(placeName) {
   return placeName.replace(/^\d+\.\s*/, "").trim();
 }
 
-function calculateSimilarity(string1, string2) {
-  if (!string1 || !string2) return 0;
-
-  const normalize = (str) => str.toLowerCase().replace(/\s+/g, "");
-  const str1 = normalize(string1);
-  const str2 = normalize(string2);
-
-  let matches = 0;
-
-  for (let i = 0; i < Math.min(str1.length, str2.length); i++) {
-    if (str1[i] === str2[i]) matches++;
-  }
-
-  return matches / Math.max(str1.length, str2.length);
-}
-
-async function sendLocationBasedOnQuestion(agent, dbClient) {
+async function sendLocationBasedOnQuestion(agent, dbClient, location = "") {
   try {
-    const lineId = agent.originalRequest?.payload?.data?.source?.lineId || null;
     const userId = agent.originalRequest?.payload?.data?.source?.userId || null;
     const questionText = agent.request_.body.queryResult.queryText;
-    let placeName;
+    const lineId = agent.originalRequest.payload.data.source.userId;
+
+    const intentName = "เส้นทางไปยังสถานที่";
+    let placeName = location;
     let eventId = null;
+    let placeId = null;
+    let answer = "";
+    let sourceType = "";
+    let answerText = "";
+    let isFromWeb = false;
+    let webAnswerId = null;
+    let responseMessage = "";
 
     if (!userId) {
       console.warn("⚠️ userId is null. Attempting to fetch user profile...");
@@ -3643,49 +3775,158 @@ async function sendLocationBasedOnQuestion(agent, dbClient) {
       }
     }
 
+    const synonymMap = {
+      "โอปอ บุฟเฟ่ต์": [
+        "โอปอ บุฟเฟ่ต์",
+        "โอมายก้อน",
+        "โอปอ หมูกระทะ",
+        "โอมายก้อน by โอปอ",
+      ],
+      "อุทยานแห่งชาติภูผาม่าน": ["ภูผาม่าน", "ภูผามาน"],
+      "ป่าสนดงลาน": ["สวนสนดงลาน", "ป่าสน ดงลาน", "ดงลาน", "ป่าสนดงลาน ภูผาม่าน"],
+      "ครัวสุพรรณิการ์": [
+        "Supanniga",
+        "Supanniga Home",
+        "ห้องทานข้าวสุพรรณิการ์",
+        "ห้องทานข้าวสุพรรณิการ์",
+        "ครัวสุพรรณิการ์ (Supanniga Home)",
+      ],
+    };
+
+    const normalizeMessage = (text) => {
+      if (!text) return "";
+
+      let extractedLocation = extractLocation(text);
+      let normalized = extractedLocation.toLowerCase().trim();
+
+      Object.keys(synonymMap).forEach((key) => {
+        const regex = new RegExp(`\\b${key}\\b`, "gi");
+        console.log(`Replacing "${key}" in "${normalized}"`);
+        normalized = normalized.replace(regex, synonymMap[key]);
+      });
+      console.log("After synonym replacement:", normalized);
+
+      normalized = normalized
+        .replace(/(ไปยังไง|เดินทางยังไง|เส้นทาง)/gi, "")
+        .replace(/(?<!2499 )cafe|หมูกระทะ|สนามบิน|บุฟเฟต์|ร้าน|คาเฟ่/gi, "")
+        .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, "")
+        .replace(/[()\-,./\\_]/g, "")
+        .replace(/\d+/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      console.log("Before normalization:", extractedLocation);
+      console.log("After each step:", normalized);
+      return normalized;
+    };
+
+
     if (
       agent.parameters &&
       agent.parameters.Location &&
       agent.parameters.Location.length > 0
     ) {
-      placeName = agent.parameters.Location[0];
+      console.log("Original Location Parameter:", agent.parameters.Location[0]);
+      placeName = normalizeMessage(agent.parameters.Location[0]);
       console.log(`Using Location from Parameters: ${placeName}`);
     }
 
-    const normalizedLocation = normalizeText(placeName);
-    const normalizedQuestion = normalizeText(questionText);
-    const similarityScore = getSimilarityScore(
-      normalizedLocation,
-      normalizedQuestion
-    );
+    const normalizedLocation = normalizeMessage(placeName);
+    const normalizedQuestion = normalizeMessage(questionText);
+    placeName = normalizedLocation;
 
-    console.log(`Similarity Score: ${similarityScore}`);
+    console.log(`🔍 Normalized Place Name: "${normalizedLocation}"`);
+    console.log(`🔍 Normalized Question Text: "${normalizedQuestion}"`);
 
-    if (similarityScore > 0.7) {
-      console.log("Checking similarity with alternative method...");
-      const similarity = calculateSimilarity(
+    // ✅ ถ้า location และ questionText ตรงกัน ให้ใช้ location ทันที
+    if (
+      normalizedLocation === normalizedQuestion ||
+      normalizedQuestion.includes(normalizedLocation) ||
+      normalizedLocation.includes(normalizedQuestion)
+    ) {
+      console.log(
+        "✅ Location and QuestionText are identical or subset. Using Location."
+      );
+      console.log(
+        `สถานที่ที่คุณค้นหาคือ: "${placeName}" (ใช้ค่า Location ตรง ๆ)`
+      );
+      placeName = normalizedLocation;
+    } else {
+      // ✅ คำนวณ similarity
+      const similarityScore = getSimilarityScore(
         normalizedLocation,
         normalizedQuestion
       );
-      if (similarity > 0.7) {
-        console.log(`Using corrected place name: ${placeName}`);
-      } else {
-        console.log("Similarity score is too low, extracting Place Name...");
-        const apiKey = "AIzaSyCBjF0_ddt3QZj9eSjK4xUWYYdvYyUjvO0";
-        placeName = await extractPlaceFromText(questionText, apiKey);
-      }
-    }
+      const isTextMatch = similarityScore > 0.25;
+      console.log(
+        `📊 Similarity Score: ${similarityScore}, isTextMatch: ${isTextMatch}`
+      );
 
-    if (!placeName) {
-      console.log("No valid Place Name found. Sending default response.");
-      agent.add("ไม่พบข้อมูลสถานที่ที่เกี่ยวข้องกับคำถามของคุณ.");
-      return;
+      if (similarityScore >= 0.3) {
+        console.log("✅ Similarity สูงพอ ใช้ Location ตรง ๆ");
+        console.log(
+          `สถานที่ที่คุณค้นหาคือ: "${placeName}" (ใช้ค่า Location ที่คล้ายกันมาก)`
+        );
+        placeName = normalizedLocation;
+      } else {
+        // 🚨 **แทนที่จะเรียก API ทันที ให้ลองเช็คฐานข้อมูลก่อน**
+        console.log("🚨 Similarity ต่ำ ต้องลองเช็คฐานข้อมูลก่อน...");
+        const dbResult = await getAnswerForIntent(
+          intentName,
+          normalizedLocation,
+          dbClient
+        );
+        const webResult = await getAnswerFromWebAnswerTable(
+          intentName,
+          normalizedLocation,
+          dbClient
+        );
+
+        if (dbResult?.answer || webResult?.answer) {
+          console.log("✅ พบข้อมูลในฐานข้อมูล ใช้ Location ได้เลย");
+          placeName = normalizedLocation;
+        } else {
+          console.log(
+            "🚨 Similarity ต่ำไป ต้องใช้ API เพื่อดึงข้อมูลสถานที่..."
+          );
+
+          const apiKey = "AIzaSyCBjF0_ddt3QZj9eSjK4xUWYYdvYyUjvO0";
+          placeName = await extractPlaceFromText(normalizedLocation, apiKey);
+          console.log(`🌍 ค่าที่ได้จาก API: "${placeName}"`);
+
+          if (!placeName) {
+            console.log(
+              "❌ No valid Place Name extracted. Sending default response."
+            );
+            responseMessage = "ไม่พบข้อมูลสถานที่ที่เกี่ยวข้องกับคำถามของคุณ.";
+            sourceType = "unknown";
+            await saveConversation(
+              questionText,
+              responseMessage,
+              lineId,
+              placeId,
+              eventId,
+              sourceType,
+              webAnswerId,
+              dbClient
+            );
+            const payload = new Payload(
+              "LINE",
+              { type: "text", text: responseMessage },
+              { sendAsMessage: true }
+            );
+            agent.add(payload);
+            return;
+          }
+        }
+      }
     }
 
     console.log(`Final Place Name to be used: ${placeName}`);
 
     let locationMessage = null;
 
+    //1. ค้นหาใน locations
     if (placeName && Array.isArray(locations.locations.locations)) {
       locations.locations.locations.forEach((loc) => {
         if (placeName.toLowerCase().includes(loc.title.toLowerCase())) {
@@ -3721,6 +3962,77 @@ async function sendLocationBasedOnQuestion(agent, dbClient) {
       }
     }
 
+    //2. ค้นหาในตาราง places
+    console.log("🔍 Searching in places table...");
+    const placeResult = await getAnswerForIntent(
+      "เส้นทางไปยังสถานที่",
+      placeName,
+      dbClient
+    );
+
+    if (placeResult?.answer) {
+      const locationMessage = {
+        type: "location",
+        title: placeResult.matchedPlaceName,
+        address: placeResult.answer.address,
+        latitude: 0,
+        longitude: 0,
+      };
+
+      console.log("✅ Found location in places table:", locationMessage);
+      if (dbClient && userId) {
+        await saveConversation(
+          `เส้นทางไปยัง ${locationMessage.title}`,
+          locationMessage.address,
+          userId,
+          placeResult.placeId,
+          null,
+          "Location message",
+          null,
+          dbClient
+        );
+      }
+      await client.pushMessage(userId, locationMessage);
+      agent.add(`ได้เลยค่ะ นี่คือเส้นทางไป ${locationMessage.title} ค่ะ`);
+      return;
+    }
+
+    //3. ถ้าไม่พบใน places ให้ค้นหาใน web_answer
+    console.log("🔍 Searching in web_answer table...");
+    const webAnswerResult = await getAnswerFromWebAnswerTable(
+      "เส้นทางไปยังสถานที่",
+      placeName,
+      dbClient
+    );
+
+    if (webAnswerResult?.answer) {
+      const locationMessage = {
+        type: "location",
+        title: webAnswerResult.placeName,
+        address: webAnswerResult.answer,
+        latitude: 0,
+        longitude: 0,
+      };
+
+      console.log("✅ Found location in web_answer table:", locationMessage);
+      if (dbClient && userId) {
+        await saveConversation(
+          `เส้นทางไปยัง ${locationMessage.title}`,
+          locationMessage.address,
+          userId,
+          null,
+          null,
+          "Location message",
+          webAnswerResult.placeId,
+          dbClient
+        );
+      }
+      await client.pushMessage(userId, locationMessage);
+      agent.add(`ได้เลยค่ะ นี่คือเส้นทางไป ${locationMessage.title} ค่ะ`);
+      return;
+    }
+
+    //4. ค้นหาใน JSON files
     console.log(
       "Location not found in current database, searching in JSON files..."
     );
@@ -3801,9 +4113,14 @@ async function sendLocationBasedOnQuestion(agent, dbClient) {
     if (correctedLocation && correctedLocation.ข้อมูลที่ค้นพบ) {
       const address = Array.isArray(correctedLocation.ข้อมูลที่ค้นพบ)
         ? correctedLocation.ข้อมูลที่ค้นพบ
-            .find((info) => info.startsWith("ที่อยู่:"))
-            ?.replace("ที่อยู่: ", "")
-            .trim() || "ไม่ได้ระบุข้อมูลที่อยู่"
+            .find((info) =>
+              info
+                .trim()
+                .match(/^(ที่อยู่สถานที่\s*:|ที่อยู่\s*:|Location\s*:)/)
+            )
+            ?.replace(/^(ที่อยู่สถานที่\s*:|ที่อยู่\s*:|Location\s*:)/, "")
+            ?.replace(/\s+/g, " ")
+            ?.trim() || "ไม่ได้ระบุข้อมูลที่อยู่"
         : "ไม่ได้ระบุข้อมูลที่อยู่";
 
       locationMessage = {
@@ -3816,6 +4133,33 @@ async function sendLocationBasedOnQuestion(agent, dbClient) {
 
       console.log("Sending location message from JSON data:", locationMessage);
       agent.add(`นี่คือเส้นทางไป ${locationMessage.title} ค่ะ`);
+
+      const responseMessage = locationMessage.address;
+      const cleanedLocationName = locationMessage.title;
+      const isFromWeb = true;
+      const imageUrl = correctedLocation.รูปภาพ
+        ? correctedLocation.รูปภาพ[0]
+        : null;
+      const imageDescription = correctedLocation.รายละเอียดรูปภาพ || null;
+      const contactLink =
+        correctedLocation.ข้อมูลที่ค้นพบ
+          .find((info) => info.trim().match(/^(Facebook\s*:|เว็บไซต์\s*:)/))
+          ?.replace(/^(Facebook\s*:|เว็บไซต์\s*:)/, "")
+          ?.replace(/\s+/g, " ")
+          ?.trim() || "ไม่ได้ระบุข้อมูลที่อยู่";
+
+      await saveWebAnswer(
+        responseMessage,
+        cleanedLocationName,
+        intentName,
+        isFromWeb,
+        dbClient,
+        imageUrl,
+        imageDescription,
+        contactLink
+      );
+      console.log("Answer saved to database from webData sources.");
+
     } else {
       console.log("ข้อมูลที่ค้นพบไม่เป็นอาร์เรย์หรือไม่มีค่า.");
       agent.add("ไม่สามารถดึงข้อมูลตำแหน่งได้ในขณะนี้.");

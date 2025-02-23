@@ -24,8 +24,8 @@
                 <th class="px-4 py-2 text-left">Description</th>
                 <th class="px-4 py-2 text-left">Address</th>
                 <th class="px-4 py-2 text-left">Event Month</th>
-                <th class="px-4 py-2 text-left">Start_time</th>
-                <th class="px-4 py-2 text-left">End_time</th>
+                <th class="px-4 py-2 text-left">Activity_time</th>
+                <th class="px-4 py-2 text-left">Opening_hours</th>
                 <th class="px-4 py-2 text-left">Image Link</th>
                 <th class="px-4 py-2 text-left">Image Detail</th>
                 <th class="px-4 py-2 text-left">Created</th>
@@ -63,12 +63,12 @@
                   {{ event.event_month || 'No data available' }}
                 </td>
 
-                <td :class="!event.start_time ? 'text-red-500' : ''">
-                  {{ formatDate(event.start_time) }}
+                <td :class="!event.activity_time ? 'text-red-500' : ''">
+                  {{ event.activity_time || 'No data available' }}
                 </td>
 
-                <td :class="!event.end_time ? 'text-red-500' : ''">
-                  {{ formatDate(event.end_time) }}
+                <td :class="!event.opening_hours ? 'text-red-500' : ''">
+                  {{ event.opening_hours || 'No data available' }}
                 </td>
 
                 <td>
@@ -165,44 +165,45 @@
               <label for="add-event_month" class="block mb-2 font-semibold text-gray-700">
                 Event Month:
               </label>
-              <textarea
+              <select
                 id="add-event_month"
                 v-model="currentEvents.event_month"
+                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="" disabled>เลือกเดือน</option>
+                <option v-for="month in thaiMonths" :key="month" :value="month">
+                  {{ month }}
+                </option>
+              </select>
+            </div>
+
+            <div class="mb-4">
+              <label for="add-activity-time" class="block mb-2 font-semibold text-gray-700">
+                Activity time :
+              </label>
+              <textarea
+                id="add-activity-time"
+                v-model="currentEvents.activity_time"
                 type="text"
                 rows="1"
                 @input="adjustHeight"
                 class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter event_month (optional)"
+                placeholder="Enter activity_time"
               ></textarea>
             </div>
 
             <div class="mb-4">
-              <label for="add-start-time" class="block mb-2 font-semibold text-gray-700">
-                Start time :
+              <label for="add-opening-hours" class="block mb-2 font-semibold text-gray-700">
+                Opening-hours :
               </label>
               <textarea
-                id="add-start-time"
-                v-model="currentEvents.start_time"
+                id="add-opening-hours"
+                v-model="currentEvents.opening_hours"
                 type="text"
                 rows="1"
                 @input="adjustHeight"
                 class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter start_time (YY/MM/DD)"
-              ></textarea>
-            </div>
-
-            <div class="mb-4">
-              <label for="add-end-time" class="block mb-2 font-semibold text-gray-700">
-                End time :
-              </label>
-              <textarea
-                id="add-end-time"
-                v-model="currentEvents.end_time"
-                type="text"
-                rows="1"
-                @input="adjustHeight"
-                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter end_time (YY/MM/DD)"
+                placeholder="Enter opening_hours"
               ></textarea>
             </div>
 
@@ -298,44 +299,45 @@
               <label for="add-event_month" class="block mb-2 font-semibold text-gray-700">
                 Event Month:
               </label>
-              <textarea
+              <select
                 id="add-event_month"
                 v-model="currentEvents.event_month"
+                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="" disabled>เลือกเดือน</option>
+                <option v-for="month in thaiMonths" :key="month" :value="month">
+                  {{ month }}
+                </option>
+              </select>
+            </div>
+
+            <div class="mb-4">
+              <label for="add-activity-time" class="block mb-2 font-semibold text-gray-700">
+                Activity time :
+              </label>
+              <textarea
+                id="add-activity-time"
+                v-model="currentEvents.activity_time"
                 type="text"
                 rows="1"
                 @input="adjustHeight"
                 class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                evevtholder="Enter event_month (optional)"
+                eventholder="Enter activity_time "
               ></textarea>
             </div>
 
             <div class="mb-4">
-              <label for="add-start-time" class="block mb-2 font-semibold text-gray-700">
-                Start time :
+              <label for="add-opening-hours" class="block mb-2 font-semibold text-gray-700">
+                <Em></Em>Opening-hours :
               </label>
               <textarea
-                id="add-start-time"
-                v-model="currentEvents.start_time"
+                id="add-opening-hours"
+                v-model="currentEvents.opening_hours"
                 type="text"
                 rows="1"
                 @input="adjustHeight"
                 class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                eventholder="Enter start_time (YY/MM/DD)"
-              ></textarea>
-            </div>
-
-            <div class="mb-4">
-              <label for="add-end-time" class="block mb-2 font-semibold text-gray-700">
-                <Em></Em>nd time :
-              </label>
-              <textarea
-                id="add-end-time"
-                v-model="currentEvents.end_time"
-                type="text"
-                rows="1"
-                @input="adjustHeight"
-                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                eventholder="Enter end_time (YY/MM/DD)"
+                eventholder="Enter opening_hours"
               ></textarea>
             </div>
 
@@ -400,13 +402,17 @@ const currentEvents = ref({
   event_name: '',
   description: '',
   event_month: '',
-  start_time: '',
-  end_time: '',
+  activity_time: '',
+  opening_hours: '',
   address: '',
   contact_link: '',
   image_link: '',
   image_detail: ''
 })
+const thaiMonths = [
+  "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+  "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+];
 
 const events = computed(() => store.event)
 
@@ -420,8 +426,8 @@ function openAddModal() {
     event_name: '',
     description: '',
     event_month: '',
-    start_time: '',
-    end_time: '',
+    activity_time: '',
+    opening_hours: '',
     address: '',
     contact_link: '',
     image_link: '',
@@ -442,132 +448,145 @@ function closeEditModal() {
   isEditModalActive.value = false
 }
 
-function isValidDateFormat(date) {
-  const pattern = /^\d{4}\/\d{2}\/\d{2}$/;
-  return pattern.test(date);
-}
-
 async function saveAdd() {
-  console.log("📤 Before Sending:", currentEvents.value);
+  console.log('📤 Before Sending:', currentEvents.value)
 
   if (!currentEvents.value.event_name) {
     Swal.fire({
-      icon: "warning",
-      title: "Please enter the event name",
+      icon: 'warning',
+      title: 'Please enter the event name',
       text: 'The "Event Name" field is required',
-      confirmButtonText: "OK",
-      confirmButtonColor: "#0277bd",
-    });
-    return;
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#0277bd'
+    })
+    return
+  }
+  if (!currentEvents.value.event_month) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Event Month',
+      text: 'กรุณาเลือกเดือนของงานอีเวนต์',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#FF5722'
+    })
+    return
   }
 
-  // ✅ ตรวจสอบรูปแบบของ start_time และ end_time
-  if (!isValidDateFormat(currentEvents.value.start_time)) {
+  // ✅ ไม่ต้องตรวจสอบ activity_time และ opening_hours แล้ว
+  if (!currentEvents.value.activity_time) {
     Swal.fire({
-      icon: "error",
-      title: "Invalid Start Date",
-      text: "กรุณากรอกวันที่เริ่มต้นในรูปแบบ ปี/เดือน/วัน (YYYY/MM/DD)",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#FF5722",
-    });
-    return;
+      icon: 'error',
+      title: 'Invalid Activity Time',
+      text: "กรุณากรอกเวลาทำการ เช่น '09:00–17:30 น. (ปิดวันจันทร์)'",
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#FF5722'
+    })
+    return
   }
 
-  if (!isValidDateFormat(currentEvents.value.end_time)) {
+  if (!currentEvents.value.opening_hours) {
     Swal.fire({
-      icon: "error",
-      title: "Invalid End Date",
-      text: "กรุณากรอกวันที่สิ้นสุดในรูปแบบ ปี/เดือน/วัน (YYYY/MM/DD)",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#FF5722",
-    });
-    return;
+      icon: 'error',
+      title: 'Invalid Opening Hours',
+      text: "กรุณากรอกเวลาทำการ เช่น '09:00–17:30 น. (ปิดวันจันทร์)'",
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#FF5722'
+    })
+    return
   }
 
   const eventData = {
     event_name: currentEvents.value.event_name,
     description: currentEvents.value.description || null,
     event_month: currentEvents.value.event_month || null,
-    start_time: currentEvents.value.start_time || null,
-    end_time: currentEvents.value.end_time || null,
+    activity_time: currentEvents.value.activity_time || null, // 🛠 ใช้ข้อความตรงๆ
+    opening_hours: currentEvents.value.opening_hours || null, // 🛠 ใช้ข้อความตรงๆ
     address: currentEvents.value.address || null,
     image_link: currentEvents.value.image_link || null,
-    image_detail: currentEvents.value.image_detail || null,
-  };
+    image_detail: currentEvents.value.image_detail || null
+  }
 
   try {
-    console.log("📤 Sending Event Data:", eventData);
-    await store.addEvent(eventData);
+    console.log('📤 Sending Event Data:', eventData)
+    await store.addEvent(eventData)
     Swal.fire({
-      icon: "success",
-      title: "Saved!",
-      text: "Your event has been added successfully.",
+      icon: 'success',
+      title: 'Saved!',
+      text: 'Your event has been added successfully.',
       timer: 1500,
-      showConfirmButton: false,
-    });
-    closeAddModal();
+      showConfirmButton: false
+    })
+    closeAddModal()
   } catch (error) {
-    console.error("❌ Error adding event:", error.response ? error.response.data : error.message);
+    console.error('❌ Error adding event:', error.response ? error.response.data : error.message)
     Swal.fire({
-      icon: "error",
-      title: "Error!",
-      text: error.response ? error.response.data : "There was a problem adding the event.",
-    });
+      icon: 'error',
+      title: 'Error!',
+      text: error.response ? error.response.data : 'There was a problem adding the event.'
+    })
   }
 }
-
 
 async function saveEdit() {
   if (!currentEvents.value.id) {
     Swal.fire({
-      icon: "error",
-      title: "Error!",
-      text: "The event ID is missing or invalid.",
-    });
-    return;
+      icon: 'error',
+      title: 'Error!',
+      text: 'The event ID is missing or invalid.'
+    })
+    return
+  }
+  if (!currentEvents.value.event_month) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Event Month',
+      text: 'กรุณาเลือกเดือนของงานอีเวนต์',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#FF5722'
+    })
+    return
   }
 
-  if (!isValidDateFormat(currentEvents.value.start_time)) {
+  if (!currentEvents.value.activity_time) {
     Swal.fire({
-      icon: "error",
-      title: "Invalid Start Date",
-      text: "กรุณากรอกวันที่เริ่มต้นในรูปแบบ ปี/เดือน/วัน (YYYY/MM/DD)",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#FF5722",
-    });
-    return;
+      icon: 'error',
+      title: 'Invalid Activity Time',
+      text: "กรุณากรอกเวลาทำการ เช่น '09:00–17:30 น. (ปิดวันจันทร์)'",
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#FF5722'
+    })
+    return
   }
 
-  if (!isValidDateFormat(currentEvents.value.end_time)) {
+  if (!currentEvents.value.opening_hours) {
     Swal.fire({
-      icon: "error",
-      title: "Invalid End Date",
-      text: "กรุณากรอกวันที่สิ้นสุดในรูปแบบ ปี/เดือน/วัน (YYYY/MM/DD)",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#FF5722",
-    });
-    return;
+      icon: 'error',
+      title: 'Invalid Opening Hours',
+      text: "กรุณากรอกเวลาทำการ เช่น '09:00–17:30 น. (ปิดวันจันทร์)'",
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#FF5722'
+    })
+    return
   }
 
   try {
-    await store.updateEvent(currentEvents.value);
+    await store.updateEvent(currentEvents.value)
     Swal.fire({
-      icon: "success",
-      title: "Updated!",
-      text: "Your event has been updated successfully.",
+      icon: 'success',
+      title: 'Updated!',
+      text: 'Your event has been updated successfully.',
       timer: 1500,
-      showConfirmButton: false,
-    });
-    closeEditModal();
+      showConfirmButton: false
+    })
+    closeEditModal()
   } catch (error) {
     Swal.fire({
-      icon: "error",
-      title: "Error!",
-      text: "There was a problem updating the event.",
-    });
+      icon: 'error',
+      title: 'Error!',
+      text: 'There was a problem updating the event.'
+    })
   }
 }
-
 
 async function confirmDelete(id) {
   console.log('⚠️ Confirm delete for Event ID:', id)
@@ -630,7 +649,7 @@ function formatValue(value) {
 }
 
 function formatDate(date) {
-  return date ? new Date(date).toLocaleDateString() : 'null'
+  return date ? new Date(date).toLocaleDateString() : 'No date available'
 }
 
 function showFullDescription(description) {

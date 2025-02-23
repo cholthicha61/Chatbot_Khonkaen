@@ -45,53 +45,71 @@ const getTableCounts = async (client) => {
 };
 
 router.post("/", async (req, res) => {
-  console.log(req.body);
-  try {
-    const {
-      name,
-      description,
-      admission_fee,
-      address,
-      contact_link,
-      opening_hours,
-      image_link,
-      image_detail,
-    } = req.body;
+  console.log("Received payload:", JSON.stringify(req.body, null, 2));
 
-    if (!name || name.trim() === "") {
-      return res.status(400).json({ error: "Place name is required" });
+  try {
+    const places = req.body; // ควรเป็น Array ของสถานที่
+
+    if (!Array.isArray(places) || places.length === 0) {
+      return res.status(400).json({ error: "Invalid input: At least one place is required" });
     }
 
-    const query = `
-    INSERT INTO places (name, description, admission_fee, address, contact_link, opening_hours, image_link, image_detail)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    RETURNING *;
-  `;
+    // 1️⃣ **INSERT ข้อมูลสถานที่ทั้งหมดในครั้งเดียว**
+    const placeValues = places.map(p => [
+      p.name, 
+      p.description || null, 
+      p.admission_fee !== undefined ? p.admission_fee : null, 
+      p.address, 
+      p.contact_link || null, 
+      p.opening_hours || null
+    ]);
+    
+    const placeQuery = `
+      INSERT INTO places (name, description, admission_fee, address, contact_link, opening_hours)
+      VALUES ${placeValues.map((_, i) => `($${i * 6 + 1}, $${i * 6 + 2}, $${i * 6 + 3}, $${i * 6 + 4}, $${i * 6 + 5}, $${i * 6 + 6})`).join(", ")}
+      RETURNING id, name;
+    `;
+
+    const flatPlaceValues = placeValues.flat();
+    const placeResult = await req.client.query(placeQuery, flatPlaceValues);
+    const insertedPlaces = placeResult.rows;
+
+    // 2️⃣ **INSERT ข้อมูลรูปภาพทั้งหมด**
+    const imageValues = [];
+    insertedPlaces.forEach((place, index) => {
+      const placeImages = places[index].images || [];
+      placeImages.forEach(img => {
+        imageValues.push([place.id, img.image_link, img.image_detail || null]);
+      });
+    });
+
+    if (imageValues.length > 0) {
+      const imageQuery = `
+        INSERT INTO place_images (place_id, image_link, image_detail)
+        VALUES ${imageValues.map((_, i) => `($${i * 3 + 1}, $${i * 3 + 2}, $${i * 3 + 3})`).join(", ")}
+        RETURNING *;
+      `;
+
+      const flatImageValues = imageValues.flat();
+      await req.client.query(imageQuery, flatImageValues);
+    }
 
     await getTableCounts(req.client);
+    res.status(201).json({ message: "Places added successfully", places: insertedPlaces });
 
-    const result = await req.client.query(query, [
-      name,
-      description,
-      admission_fee,
-      address,
-      contact_link,
-      opening_hours,
-      image_link,
-      image_detail,
-    ]);
-
-    res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error("Error creating place", err.stack);
+    console.error("Error creating places", err.stack);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-
 router.get("/", async (req, res) => {
   const query = `
-    SELECT * FROM places;
+    SELECT places.*, 
+      json_agg(json_build_object('image_link', place_images.image_link, 'image_detail', place_images.image_detail)) AS images
+    FROM places
+    LEFT JOIN place_images ON places.id = place_images.place_id
+    GROUP BY places.id;
   `;
 
   try {
@@ -106,20 +124,23 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
-  const query = "SELECT * FROM places WHERE id = $1;";
+  const placeQuery = "SELECT * FROM places WHERE id = $1;";
+  const imageQuery = "SELECT * FROM place_images WHERE place_id = $1;";
 
   try {
-    const result = await req.client.query(query, [id]);
-    if (result.rows.length === 0) {
+    const placeResult = await req.client.query(placeQuery, [id]);
+    if (placeResult.rows.length === 0) {
       return res.status(404).json({ error: "Place not found" });
     }
-    res.json(result.rows[0]);
+
+    const imageResult = await req.client.query(imageQuery, [id]);
+
+    res.json({ ...placeResult.rows[0], images: imageResult.rows });
   } catch (err) {
     console.error("Error fetching place", err.stack);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 
 router.patch("/:id", async (req, res) => {
   const { id } = req.params;
@@ -133,40 +154,57 @@ router.patch("/:id", async (req, res) => {
     address,
     contact_link,
     opening_hours,
-    image_link,
-    image_detail,
+    images, // Array ของรูปภาพใหม่
   } = req.body;
 
-  const query = `
-  UPDATE places
-  SET name = $1, description = $2, admission_fee = $3, address = $4, contact_link = $5, opening_hours = $6, image_link = $7, image_detail = $8
-  WHERE id = $9
-  RETURNING *;
-`;
-
   try {
-    const result = await req.client.query(query, [
+    // อัปเดตข้อมูลสถานที่
+    const placeQuery = `
+      UPDATE places
+      SET name = $1, description = $2, admission_fee = $3, address = $4, contact_link = $5, opening_hours = $6
+      WHERE id = $7
+      RETURNING *;
+    `;
+
+    const placeResult = await req.client.query(placeQuery, [
       name,
       description,
       admission_fee,
       address,
       contact_link,
       opening_hours,
-      image_link,
-      image_detail,
       id
     ]);
 
-    if (result.rows.length === 0) {
+    if (placeResult.rows.length === 0) {
       return res.status(404).json({ error: "Place not found" });
     }
-    res.json(result.rows[0]);
+
+    // ถ้ามีการอัปเดตรูปภาพ
+    if (images && Array.isArray(images) && images.length > 0) {
+      // ลบรูปเก่าของสถานที่นี้
+      await req.client.query("DELETE FROM place_images WHERE place_id = $1;", [id]);
+
+      // เพิ่มรูปภาพใหม่
+      const imageValues = images.map(img => [id, img.image_link, img.image_detail || null]);
+      const imageQuery = `
+        INSERT INTO place_images (place_id, image_link, image_detail)
+        VALUES ${imageValues.map((_, i) => `($${i * 3 + 1}, $${i * 3 + 2}, $${i * 3 + 3})`).join(", ")}
+        RETURNING *;
+      `;
+
+      const flatValues = imageValues.flat();
+      const imageResult = await req.client.query(imageQuery, flatValues);
+
+      res.json({ ...placeResult.rows[0], images: imageResult.rows });
+    } else {
+      res.json(placeResult.rows[0]);
+    }
   } catch (err) {
     console.error("Error updating place", err.stack);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;

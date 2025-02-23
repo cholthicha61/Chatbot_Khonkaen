@@ -59,26 +59,34 @@ const createTables = async () => {
 
   const createPlacesTable = `
     CREATE TABLE IF NOT EXISTS places (
-      id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      description TEXT,
-      admission_fee TEXT,
-      address TEXT,
-      contact_link TEXT,
-      opening_hours VARCHAR(255),
-      image_link TEXT,
-      image_detail VARCHAR(255),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  admission_fee TEXT,
+  address TEXT,
+  contact_link TEXT,
+  opening_hours VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
   `;
+
+  const createPlaceImagesTable = `
+ CREATE TABLE IF NOT EXISTS place_images (
+  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  place_id INT REFERENCES places(id) ON DELETE CASCADE,
+  image_link TEXT NOT NULL,
+  image_detail VARCHAR(255)
+);
+`;
+
   const createEventTable = `
       CREATE TABLE IF NOT EXISTS event (
       id SERIAL PRIMARY KEY,
       event_name VARCHAR(255) NOT NULL,
       description TEXT,
       event_month TEXT,
-      start_time DATE,
-      end_time DATE,
+      activity_time TEXT,
+      opening_hours VARCHAR(255),
       address TEXT,
       image_link TEXT,
       image_detail TEXT, 
@@ -139,6 +147,7 @@ const createTables = async () => {
   try {
     await client.query(createUsersTable);
     await client.query(createPlacesTable);
+    await client.query(createPlaceImagesTable);
     await client.query(createEventTable);
     await client.query(createFlexTouristTable);
     await client.query(createWabAnswerTable);

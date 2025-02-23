@@ -44,7 +44,9 @@ import SectionTitleLineWithButton from '@/components/SectionTitleLineWithButton.
 import { computed, onMounted } from 'vue'
 import { useUsersStore } from '@/stores/modules/users'
 const store = useUsersStore()
-const users = computed(() => store.users)
+const users = computed(() => {
+  return [...store.users].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+})
 
 onMounted(() => {
   store.fetchUsers()

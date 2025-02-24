@@ -449,8 +449,6 @@ function closeEditModal() {
 }
 
 async function saveAdd() {
-  console.log('📤 Before Sending:', currentEvents.value)
-
   if (!currentEvents.value.event_name) {
     Swal.fire({
       icon: 'warning',
@@ -472,7 +470,6 @@ async function saveAdd() {
     return
   }
 
-  // ✅ ไม่ต้องตรวจสอบ activity_time และ opening_hours แล้ว
   if (!currentEvents.value.activity_time) {
     Swal.fire({
       icon: 'error',
@@ -484,30 +481,18 @@ async function saveAdd() {
     return
   }
 
-  if (!currentEvents.value.opening_hours) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Invalid Opening Hours',
-      text: "กรุณากรอกเวลาทำการ เช่น '09:00–17:30 น. (ปิดวันจันทร์)'",
-      confirmButtonText: 'OK',
-      confirmButtonColor: '#FF5722'
-    })
-    return
-  }
-
   const eventData = {
     event_name: currentEvents.value.event_name,
     description: currentEvents.value.description || null,
     event_month: currentEvents.value.event_month || null,
-    activity_time: currentEvents.value.activity_time || null, // 🛠 ใช้ข้อความตรงๆ
-    opening_hours: currentEvents.value.opening_hours || null, // 🛠 ใช้ข้อความตรงๆ
+    activity_time: currentEvents.value.activity_time || null,
+    opening_hours: currentEvents.value.opening_hours || null, // ✅ อนุญาตให้เป็น null ได้
     address: currentEvents.value.address || null,
     image_link: currentEvents.value.image_link || null,
     image_detail: currentEvents.value.image_detail || null
   }
 
   try {
-    console.log('📤 Sending Event Data:', eventData)
     await store.addEvent(eventData)
     Swal.fire({
       icon: 'success',
@@ -518,7 +503,6 @@ async function saveAdd() {
     })
     closeAddModal()
   } catch (error) {
-    console.error('❌ Error adding event:', error.response ? error.response.data : error.message)
     Swal.fire({
       icon: 'error',
       title: 'Error!',
@@ -558,17 +542,6 @@ async function saveEdit() {
     return
   }
 
-  if (!currentEvents.value.opening_hours) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Invalid Opening Hours',
-      text: "กรุณากรอกเวลาทำการ เช่น '09:00–17:30 น. (ปิดวันจันทร์)'",
-      confirmButtonText: 'OK',
-      confirmButtonColor: '#FF5722'
-    })
-    return
-  }
-
   try {
     await store.updateEvent(currentEvents.value)
     Swal.fire({
@@ -587,6 +560,7 @@ async function saveEdit() {
     })
   }
 }
+
 
 async function confirmDelete(id) {
   console.log('⚠️ Confirm delete for Event ID:', id)

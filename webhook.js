@@ -196,9 +196,9 @@ const saveWebAnswer = async (
     `;
     const values = [
       placeName,
-      finalAnswerText, 
+      finalAnswerText,
       intentType,
-      finalImageUrl, 
+      finalImageUrl,
       imageDescription || "ไม่มีรายละเอียดรูปภาพ",
       contactLink || "ไม่มีข้อมูลติดต่อ",
     ];
@@ -795,7 +795,8 @@ const fetchHTMLAndSaveToJSON6 = async (url, outputFilePath) => {
         สถานที่: locationName,
         รูปภาพ: listImg.length > 0 ? listImg : "ไม่มีรูปภาพ",
         รายละเอียดรูปภาพ:
-          imageDetails || "ขอบคุณรูปภาพจาก : tripgether ทริปเก็ทเตอร์ จาก  tripgether.com",
+          imageDetails ||
+          "ขอบคุณรูปภาพจาก : tripgether ทริปเก็ทเตอร์ จาก  tripgether.com",
         รายละเอียด: locationDetail,
         ข้อมูลที่ค้นพบ: listItems,
       });
@@ -1812,39 +1813,37 @@ const getAnswerForIntent = async (intentName, placeName, dbClient) => {
       const contactLink =
         result.rows[0].contact_link || "ไม่พบข้อมูลช่องทางการติดต่อสถานที่";
 
-        const filteredAnswer = {
-          address: null,
-          fee: null,
-          contact: null,
-          openingHours: null,
-          contact_link: null,
-          other: null,
-        };
-  
+      const filteredAnswer = {
+        address: null,
+        fee: null,
+        contact: null,
+        openingHours: null,
+        contact_link: null,
+        other: null,
+      };
 
-        if (intentName === "ค่าธรรมเนียมการเข้า") {
-          filteredAnswer.fee = answerText
-            ? answerText.trim()
-            : "ไม่พบข้อมูลค่าธรรมเนียมการเข้า";
-        } else if (intentName === "เส้นทางไปยังสถานที่") {
-          filteredAnswer.address = answerText
-            ? answerText.trim()
-            : "ไม่พบข้อมูลเส้นทางไปยังสถานที่";
-        } else if (intentName === "เวลาเปิดทำการ") {
-          filteredAnswer.openingHours = answerText
-            ? answerText.trim()
-            : "ไม่พบข้อมูลเวลาเปิดทำการ";
-        } else if (intentName === "ช่องทางการติดต่อ") {
-          filteredAnswer.contact_link = answerText
-            ? answerText.trim()
-            : "ไม่พบข้อมูลช่องทางการติดต่อสถานที่";
-        } else if (intentName === "รายละเอียด") {
-          filteredAnswer.detail = answerText
-            ? answerText.trim()
-            : "ไม่พบข้อมูลรายละเอียด";
-          filteredAnswer.contact_link = contactLink;
-        }
-  
+      if (intentName === "ค่าธรรมเนียมการเข้า") {
+        filteredAnswer.fee = answerText
+          ? answerText.trim()
+          : "ไม่พบข้อมูลค่าธรรมเนียมการเข้า";
+      } else if (intentName === "เส้นทางไปยังสถานที่") {
+        filteredAnswer.address = answerText
+          ? answerText.trim()
+          : "ไม่พบข้อมูลเส้นทางไปยังสถานที่";
+      } else if (intentName === "เวลาเปิดทำการ") {
+        filteredAnswer.openingHours = answerText
+          ? answerText.trim()
+          : "ไม่พบข้อมูลเวลาเปิดทำการ";
+      } else if (intentName === "ช่องทางการติดต่อ") {
+        filteredAnswer.contact_link = answerText
+          ? answerText.trim()
+          : "ไม่พบข้อมูลช่องทางการติดต่อสถานที่";
+      } else if (intentName === "รายละเอียด") {
+        filteredAnswer.detail = answerText
+          ? answerText.trim()
+          : "ไม่พบข้อมูลรายละเอียด";
+        filteredAnswer.contact_link = contactLink;
+      }
 
       console.log("Filtered answer:", filteredAnswer);
 
@@ -2075,9 +2074,16 @@ const createFlexDetailMessage = (
   }
 };
 
-const createFlexDatabaseDetailMessage = (placeName, imageUrls, answerText, imageDetail, contact_link) => {
+const createFlexDatabaseDetailMessage = (
+  placeName,
+  imageUrls,
+  answerText,
+  imageDetail,
+  contact_link
+) => {
   try {
-    const defaultImageUrl = "https://cloud-atg.moph.go.th/quality/sites/default/files/default_images/default.png";
+    const defaultImageUrl =
+      "https://cloud-atg.moph.go.th/quality/sites/default/files/default_images/default.png";
 
     // ถ้าไม่มีภาพให้ใช้รูป default
     if (!Array.isArray(imageUrls) || imageUrls.length === 0) {
@@ -2096,7 +2102,7 @@ const createFlexDatabaseDetailMessage = (placeName, imageUrls, answerText, image
             text: answerText || "ไม่มีรายละเอียดเพิ่มเติม",
             wrap: true,
             size: "md",
-            weight: "regular"
+            weight: "regular",
           },
           {
             type: "text",
@@ -2104,10 +2110,10 @@ const createFlexDatabaseDetailMessage = (placeName, imageUrls, answerText, image
             wrap: true,
             size: "sm",
             color: "#aaaaaa",
-            margin: "md"
-          }
-        ]
-      }
+            margin: "md",
+          },
+        ],
+      },
     };
 
     // 🔹 Image Gallery (แสดงรูปภาพแนวนอน)
@@ -2118,13 +2124,13 @@ const createFlexDatabaseDetailMessage = (placeName, imageUrls, answerText, image
         url: img,
         size: "full",
         aspectRatio: "16:9",
-        aspectMode: "cover"
-      }
+        aspectMode: "cover",
+      },
     }));
 
     return {
       type: "carousel",
-      contents: [textBubble, ...imageBubbles] // ใส่ข้อความเป็นบับเบิลแรก ตามด้วยรูปภาพ
+      contents: [textBubble, ...imageBubbles], // ใส่ข้อความเป็นบับเบิลแรก ตามด้วยรูปภาพ
     };
   } catch (error) {
     console.error("❌ Error creating Flex Message:", error);
@@ -2132,7 +2138,7 @@ const createFlexDatabaseDetailMessage = (placeName, imageUrls, answerText, image
   }
 };
 
-const sendImageDatailMessage = async ( 
+const sendImageDatailMessage = async (
   placeName,
   dbClient,
   questionText,
@@ -2173,7 +2179,7 @@ const sendImageDatailMessage = async (
     const placeData = await fetchImageData(query, [placeName], dbClient);
     if (!placeData) {
       console.warn(`⚠️ No data found in Database for ${placeName}`);
-      
+
       return await sendImageWebDetailMessage(
         placeName,
         dbClient,
@@ -2186,18 +2192,23 @@ const sendImageDatailMessage = async (
     console.log(`✅ Found place in Database: "${placeData.name}"`);
 
     // ปรับให้รองรับหลายภาพ
-    const imageUrls = placeData.image_links && placeData.image_links.length > 0
-      ? placeData.image_links
-      : ["https://cloud-atg.moph.go.th/quality/sites/default/files/default_images/default.png"];
+    const imageUrls =
+      placeData.image_links && placeData.image_links.length > 0
+        ? placeData.image_links
+        : [
+            "https://cloud-atg.moph.go.th/quality/sites/default/files/default_images/default.png",
+          ];
 
     // ดึงที่มาของภาพ ถ้ามีหลายรายการ ให้รวมกัน
-    const imageDetail = placeData.image_details && placeData.image_details.length > 0
-      ? placeData.image_details.join(", ")
-      : "ไม่ระบุ";
+    const imageDetail =
+      placeData.image_details && placeData.image_details.length > 0
+        ? placeData.image_details.join(", ")
+        : "ไม่ระบุ";
 
-    const answerText = placeData.description && placeData.description.trim() !== ""
-      ? placeData.description
-      : "ไม่มีรายละเอียดเพิ่มเติม";
+    const answerText =
+      placeData.description && placeData.description.trim() !== ""
+        ? placeData.description
+        : "ไม่มีรายละเอียดเพิ่มเติม";
 
     const flexMessage = createFlexDatabaseDetailMessage(
       placeData.name,
@@ -2352,7 +2363,7 @@ const sendImageWebDetailMessage = async (
   }
 };
 
-const getEventsByMonth = async (month, dbClient) => {  
+const getEventsByMonth = async (month, dbClient) => {
   try {
     const monthMap = {
       มกรา: "มกราคม",
@@ -2375,12 +2386,16 @@ const getEventsByMonth = async (month, dbClient) => {
     }
 
     const plainMonth = month.replace("เดือน", "").trim();
-    console.log("📌 ค้นหาข้อมูลของเดือน:", month, "| แบบไม่ใส่ 'เดือน':", plainMonth);
+    console.log(
+      "📌 ค้นหาข้อมูลของเดือน:",
+      month,
+      "| แบบไม่ใส่ 'เดือน':",
+      plainMonth
+    );
 
     const query = `SELECT * FROM event WHERE event_month ILIKE ANY(ARRAY[$1, $2, $3]) ORDER BY activity_time ASC`;
     const values = [`%${month}%`, `%เดือน${month}%`, `%${month.slice(0, 3)}%`];
     console.log("📌 Querying database with:", values);
-
 
     const { rows } = await dbClient.query(query, values);
 
@@ -2409,27 +2424,99 @@ const getEventByName = async (eventName, dbClient) => {
   try {
     console.log("📌 กำลังค้นหาอีเว้นต์:", eventName);
 
-    const query = `SELECT * FROM event WHERE event_name ILIKE $1 LIMIT 1`;
+    const query = `
+      SELECT * FROM event 
+      WHERE LOWER(event_name) ILIKE LOWER($1) 
+      LIMIT 1
+    `;
     const values = [`%${eventName.trim()}%`];
+
+    console.log("📌 ค่าที่ Query:", values);
 
     const { rows } = await dbClient.query(query, values);
 
     if (rows.length === 0) {
-      return null;
+      return `❌ ไม่พบข้อมูลเกี่ยวกับอีเวนต์ "${eventName}"`;
     }
 
     const event = rows[0];
-    return {
-      event_name: event.event_name,
-      activity_time: event.activity_time || "ไม่ระบุ",
-      address: event.address || "ไม่ระบุ",
-      description: event.description || "ไม่มีรายละเอียดเพิ่มเติม",
-      image: event.image_link,
-      imageSource: event.image_detail,
-    };
+
+    const location =
+      event.address && event.address !== "No data available"
+        ? event.address
+        : "ไม่ได้ระบุ";
+
+    const description =
+      event.description && event.description !== "No data available"
+        ? event.description
+        : "ไม่มีรายละเอียดเพิ่มเติม";
+
+    return `🎉 รายละเอียดของ ${event.event_name}:\n\n📍 สถานที่: ${location}\nℹ️ รายละเอียด: ${description}`;
   } catch (error) {
     console.error("❌ Error fetching event by name:", error);
-    return null;
+    return "⚠️ เกิดข้อผิดพลาดในการดึงข้อมูลอีเวนต์";
+  }
+};
+
+const eventByName = async (agent, dbClient) => {
+  const questionText = agent.request_.body.queryResult.queryText;
+  const lineId = agent.originalRequest.payload.data.source?.userId;
+  let responseMessage = "";
+  let sourceType = "database";
+  let eventId = null;
+
+  try {
+    console.log("📌 ข้อความที่ได้รับ:", questionText);
+
+    if (!dbClient) {
+      console.error("❌ Database client is not defined.");
+      agent.add("⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล กรุณาลองใหม่อีกครั้ง.");
+      return;
+    }
+
+    let eventName = agent.request_.body.queryResult.parameters.Event_name;
+
+    if (!eventName) {
+      const eventMatch = questionText.match(/(?:งาน|อีเว้นต์|เทศกาล|วัน|กิจกรรม)?\s*([\p{L}\d]+)/iu);
+      eventName = eventMatch ? eventMatch[1].trim() : null;
+    }
+
+    let dataFound = false;
+
+    if (eventName) {
+      console.log("📌 ค้นหาอีเว้นต์:", eventName);
+      responseMessage = await getEventByName(eventName, dbClient);
+      if (!responseMessage.includes("❌ ไม่พบข้อมูล")) {
+        dataFound = true;
+      }
+    }
+
+    if (!dataFound) {
+      let month = new Date().toLocaleString("th-TH", { month: "long" });
+      console.log("📌 ไม่มีอีเว้นต์ที่ตรงกัน → แสดงอีเว้นต์ของเดือนปัจจุบัน:", month);
+
+      const events = await getEventsByMonth(month, dbClient);
+      if (events.length > 0) {
+        responseMessage = `🔍 ไม่พบอีเว้นต์ที่คุณถาม เราขอแนะนำอีเว้นต์ในเดือน ${month}:\n\n` +
+          events.map(event => `🎉 ${event.event_name}\n📍 สถานที่: ${event.address || "ไม่ระบุ"}`).join("\n\n");
+      } else {
+        responseMessage = `❌ ไม่พบอีเว้นต์ที่คุณถาม และไม่มีข้อมูลอีเว้นต์ในเดือน ${month} ที่จะแนะนำ`;
+      }
+    }
+
+    console.log("📌 ผลลัพธ์ที่ได้:", responseMessage);
+
+    if (dbClient) {
+      await saveConversation(questionText, responseMessage, lineId, null, eventId, sourceType, null, dbClient);
+    } else {
+      console.warn("⚠️ Database client is not available. Skipping saveConversation.");
+    }
+
+    const payload = new Payload("LINE", { type: "text", text: responseMessage }, { sendAsMessage: true });
+    agent.add(payload);
+  } catch (error) {
+    console.error("❌ Error handling event intent:", error);
+    agent.add("⚠️ เกิดข้อผิดพลาด กรุณาลองใหม่");
   }
 };
 
@@ -2442,70 +2529,64 @@ const eventInMonth = async (agent, dbClient) => {
     let eventId = null;
     let month = agent.request_.body.queryResult.parameters.month || null;
     let eventName = null;
-    let dataFound = false;
 
     console.log("📌 ข้อความที่ได้รับ:", questionText);
     console.log("📌 ค่าเดือนจากพารามิเตอร์:", month);
 
     if (!dbClient) {
       console.error("❌ Database client is not defined.");
-      agent.add("⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล กรุณาลองใหม่อีกครั้ง.");
+      agent.add(
+        "⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล กรุณาลองใหม่อีกครั้ง."
+      );
       return;
     }
-
-    const eventMatch = questionText.match(/(?:งาน|อีเว้นต์|เทศกาล|วัน|กิจกรรม)?\s*([\p{L}\d]+)/iu);
+    // 🔍 ตรวจหาชื่ออีเวนต์ในคำถาม
+    const eventMatch = questionText.match(
+      /(?:งาน|อีเว้นต์|เทศกาล|วัน|กิจกรรม)?\s*([\p{L}\d]+)/iu
+    );
     if (eventMatch && eventMatch[1].trim().length > 2) {
-        eventName = eventMatch[1].trim();
+      eventName = eventMatch[1].trim();
     }
-
-    if (eventName && !month) {
-      console.log("📌 ค้นหาอีเว้นต์โดยใช้ชื่อ:", eventName);
-      const event = await getEventByName(eventName, dbClient);
-      if (event) {
-        dataFound = true;
-        events = [event];
-      }
-    }
-
-    // 🔍 **ถ้า `month` ว่างหรือ `null` ให้ค้นหาชื่อเดือนจาก `questionText`**
     if (!month) {
-      const monthRegex = /(มกรา|มกราคม|กุมภา|กุมภาพันธ์|มีนา|มีนาคม|เมษา|เมษายน|พฤษภา|พฤษภาคม|มิถุนา|มิถุนายน|กรกฎา|กรกฎาคม|สิงหา|สิงหาคม|กันยา|กันยายน|ตุลา|ตุลาคม|พฤศจิกา|พฤศจิกายน|ธันวา|ธันวาคม)/i;
+      const monthRegex =
+        /(มกรา|มกราคม|กุมภา|กุมภาพันธ์|มีนา|มีนาคม|เมษา|เมษายน|พฤษภา|พฤษภาคม|มิถุนา|มิถุนายน|กรกฎา|กรกฎาคม|สิงหา|สิงหาคม|กันยา|กันยายน|ตุลา|ตุลาคม|พฤศจิกา|พฤศจิกายน|ธันวา|ธันวาคม)/i;
       const monthMatch = questionText.match(monthRegex);
-
       if (monthMatch) {
         const monthMap = {
-          มกรา: "มกราคม", กุมภา: "กุมภาพันธ์", มีนา: "มีนาคม", เมษา: "เมษายน",
-          พฤษภา: "พฤษภาคม", มิถุนา: "มิถุนายน", กรกฎา: "กรกฎาคม", สิงหา: "สิงหาคม",
-          กันยา: "กันยายน", ตุลา: "ตุลาคม", พฤศจิกา: "พฤศจิกายน", ธันวา: "ธันวาคม"
+          มกรา: "มกราคม",
+          กุมภา: "กุมภาพันธ์",
+          มีนา: "มีนาคม",
+          เมษา: "เมษายน",
+          พฤษภา: "พฤษภาคม",
+          มิถุนา: "มิถุนายน",
+          กรกฎา: "กรกฎาคม",
+          สิงหา: "สิงหาคม",
+          กันยา: "กันยายน",
+          ตุลา: "ตุลาคม",
+          พฤศจิกา: "พฤศจิกายน",
+          ธันวา: "ธันวาคม",
         };
         month = monthMap[monthMatch[1]] || monthMatch[1];
         console.log("📌 พบชื่อเดือนในคำถาม:", month);
       }
     }
 
-    // **ถ้ายังไม่พบค่า `month` ให้ใช้เดือนปัจจุบัน**
     if (!month) {
       month = new Date().toLocaleString("th-TH", { month: "long" });
       console.log("📌 ไม่มีเดือนที่ชัดเจน → ใช้เดือนปัจจุบัน:", month);
+      agent.add(`🔍 ไม่พบอีเว้นต์ที่คุณถาม เราขอแนะนำอีเว้นต์ในเดือน ${month}`);
     }
 
-    if (!dataFound) {
-      console.log("📌 ก่อนกำหนดค่า month:", month);
-      console.log("📌 ค้นหาข้อมูลของเดือน:", month);
-      events = await getEventsByMonth(month, dbClient);
-    }
+    console.log("📌 ค้นหาข้อมูลของเดือน:", month);
+    events = await getEventsByMonth(month, dbClient);
 
     if (events.length === 0) {
-      agent.add(`❌ ไม่พบอีเวนต์ในเดือน ${month}`);
+      agent.add(`❌ ไม่พบอีเว้นต์ในเดือน ${month}`);
       return;
     }
 
     console.log("📌 อีเวนต์ที่พบ:", events.length);
-
-    const extractedMonth =
-      events[0].activity_time?.match(/(\d+)\s(\S+)/)?.[2] || month;
-
-    let eventText = `📅 อีเวนต์ในเดือน ${extractedMonth}:\n\n`;
+    let eventText = `📅 อีเวนต์ในเดือน ${month}:\n\n`;
 
     events.forEach((event, index) => {
       eventText += `${index + 1}. ${event.event_name}\n`;
@@ -2527,6 +2608,7 @@ const eventInMonth = async (agent, dbClient) => {
       null,
       dbClient
     );
+
     const flexMessages = [];
     const batchSize = 10;
 
@@ -2571,14 +2653,18 @@ const eventInMonth = async (agent, dbClient) => {
             },
             {
               type: "text",
-              text: `ℹ️ รายละเอียด: ${event.description || "ไม่มีรายละเอียดเพิ่มเติม"}`,
+              text: `ℹ️ รายละเอียด: ${
+                event.description || "ไม่มีรายละเอียดเพิ่มเติม"
+              }`,
               wrap: true,
               margin: "md",
               size: "sm",
             },
             {
               type: "text",
-              text: `ขอบคุณรูปภาพจาก: ${event.imageSource || "ไม่มีที่มาของรูปภาพ"}`,
+              text: `ขอบคุณรูปภาพจาก: ${
+                event.imageSource || "ไม่มีที่มาของรูปภาพ"
+              }`,
               wrap: true,
               margin: "md",
               size: "sm",
@@ -3170,9 +3256,9 @@ const handleIntent = async (
         "โอปอ หมูกระทะ",
         "โอมายก้อน by โอปอ",
       ],
-      "อุทยานแห่งชาติภูผาม่าน": ["ภูผาม่าน", "ภูผามาน"],
-      "ป่าสนดงลาน": ["สวนสนดงลาน", "ป่าสน ดงลาน", "ดงลาน", "ป่าสนดงลาน ภูผาม่าน"],
-      "ครัวสุพรรณิการ์": [
+      อุทยานแห่งชาติภูผาม่าน: ["ภูผาม่าน", "ภูผามาน"],
+      ป่าสนดงลาน: ["สวนสนดงลาน", "ป่าสน ดงลาน", "ดงลาน", "ป่าสนดงลาน ภูผาม่าน"],
+      ครัวสุพรรณิการ์: [
         "Supanniga",
         "Supanniga Home",
         "ห้องทานข้าวสุพรรณิการ์",
@@ -3629,6 +3715,7 @@ const handleWebhookRequest = async (req, res, dbClient) => {
     );
 
     intentMap.set("ปฎิทินประจำเดือน", (agent) => eventInMonth(agent, dbClient));
+    intentMap.set("ข้อมูลอีเวนท์", (agent) => eventByName(agent, dbClient));
 
     intentMap.set("Default Welcome Intent", (agent) =>
       handleIntent(agent, dbClient, questionText, location, displayName)
@@ -3672,7 +3759,7 @@ const handleWebhookRequest = async (req, res, dbClient) => {
       sendFlexMessageTourist(agent, "ประเภทอาหารไทย", dbClient)
     );
     intentMap.set("เส้นทางไปยังสถานที่", async (agent) => {
-      await sendLocationBasedOnQuestion(agent, dbClient,location);
+      await sendLocationBasedOnQuestion(agent, dbClient, location);
     });
 
     intentMap.set("ร้านอาหารดังยอดฮิต", async (agent) => {
@@ -3723,14 +3810,17 @@ const handleWebhookRequest = async (req, res, dbClient) => {
       }
     });
     if (!intentMap.has(displayName)) {
-      console.log("Intent not found, responding with Default Fallback Message.");
-      const fallbackMessage = "ขออภัย ฉันไม่เข้าใจคำถามของคุณ ลองถามใหม่อีกครั้งนะ 😊";
+      console.log(
+        "Intent not found, responding with Default Fallback Message."
+      );
+      const fallbackMessage =
+        "ขออภัย ฉันไม่เข้าใจคำถามของคุณ ลองถามใหม่อีกครั้งนะ 😊";
       agent.add(fallbackMessage);
       // ส่ง HTTP Response เพื่อให้ Webhook ปิดการทำงานอย่างสมบูรณ์
       return res.json({
-          fulfillmentText: fallbackMessage,
+        fulfillmentText: fallbackMessage,
       });
-  }
+    }
 
     agent.handleRequest(intentMap);
   } catch (err) {
@@ -3782,9 +3872,9 @@ async function sendLocationBasedOnQuestion(agent, dbClient, location = "") {
         "โอปอ หมูกระทะ",
         "โอมายก้อน by โอปอ",
       ],
-      "อุทยานแห่งชาติภูผาม่าน": ["ภูผาม่าน", "ภูผามาน"],
-      "ป่าสนดงลาน": ["สวนสนดงลาน", "ป่าสน ดงลาน", "ดงลาน", "ป่าสนดงลาน ภูผาม่าน"],
-      "ครัวสุพรรณิการ์": [
+      อุทยานแห่งชาติภูผาม่าน: ["ภูผาม่าน", "ภูผามาน"],
+      ป่าสนดงลาน: ["สวนสนดงลาน", "ป่าสน ดงลาน", "ดงลาน", "ป่าสนดงลาน ภูผาม่าน"],
+      ครัวสุพรรณิการ์: [
         "Supanniga",
         "Supanniga Home",
         "ห้องทานข้าวสุพรรณิการ์",
@@ -3819,7 +3909,6 @@ async function sendLocationBasedOnQuestion(agent, dbClient, location = "") {
       console.log("After each step:", normalized);
       return normalized;
     };
-
 
     if (
       agent.parameters &&
@@ -4159,7 +4248,6 @@ async function sendLocationBasedOnQuestion(agent, dbClient, location = "") {
         contactLink
       );
       console.log("Answer saved to database from webData sources.");
-
     } else {
       console.log("ข้อมูลที่ค้นพบไม่เป็นอาร์เรย์หรือไม่มีค่า.");
       agent.add("ไม่สามารถดึงข้อมูลตำแหน่งได้ในขณะนี้.");

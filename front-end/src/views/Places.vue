@@ -2,6 +2,17 @@
   <LayoutAuthenticated>
     <SectionMain>
       <SectionTitleLineWithButton :icon="mdiTableBorder" title="Places" main />
+      
+      <!-- 🔍 ช่องค้นหา -->
+      <div class="mb-4 flex justify-end">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="ค้นหาสถานที่..."
+          class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
       <CardBox class="mb-6" has-table>
         <!-- Container for the button -->
         <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4">
@@ -31,7 +42,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(place, index) in places" :key="place.id">
+              <tr v-for="(place, index) in filteredPlaces" :key="place.id">
                 <td>{{ index + 1 }}</td>
 
                 <td :class="!place.name ? 'text-red-500' : ''">
@@ -394,6 +405,7 @@ import Swal from 'sweetalert2'
 const store = usePlacesStore()
 const isAddModalActive = ref(false)
 const isEditModalActive = ref(false)
+const searchQuery = ref('')
 
 const currentPlaces = ref({
   name: '',
@@ -402,7 +414,7 @@ const currentPlaces = ref({
   opening_hours: '',
   address: '',
   contact_link: '',
-  images: [] // ✅ ตรวจสอบให้แน่ใจว่า images เป็น array ตั้งแต่เริ่ม
+  images: [] 
 })
 
 const places = computed(() => store.places)
@@ -612,6 +624,18 @@ function adjustHeight(event) {
   textarea.style.height = 'auto'
   textarea.style.height = `${textarea.scrollHeight}px`
 }
+
+const filteredPlaces = computed(() => {
+  return places.value.filter(place => {
+    const query = searchQuery.value.toLowerCase();
+    return (
+      place.name.toLowerCase().includes(query) ||
+      place.description.toLowerCase().includes(query) ||
+      place.address.toLowerCase().includes(query)
+    );
+  });
+});
+
 
 function formatValue(value) {
   return value || 'No data available'

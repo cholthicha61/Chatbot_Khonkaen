@@ -84,6 +84,17 @@
               />
             </div>
 
+            <!-- ช่องค้นหาสถานที่ -->
+            <div class="mb-4">
+              <label class="block mb-2 font-semibold text-gray-700">Search Places:</label>
+              <input
+                v-model="searchQuery"
+                type="text"
+                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Type to search places..."
+              />
+            </div>
+
             <!-- Dropdown for Places -->
             <div v-for="(place, index) in currentFlextourist.places" :key="index" class="mb-4">
               <label :for="'add-place-' + index" class="block mb-2 font-semibold text-gray-700">
@@ -95,7 +106,11 @@
                 class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="" disabled>Select a place</option>
-                <option v-for="placeOption in places" :key="placeOption.id" :value="placeOption.id">
+                <option
+                  v-for="placeOption in availablePlaces(index)"
+                  :key="placeOption.id"
+                  :value="placeOption.id"
+                >
                   {{ placeOption.name }}
                 </option>
               </select>
@@ -136,6 +151,17 @@
               />
             </div>
 
+            <!-- ช่องค้นหาสถานที่ -->
+            <div class="mb-4">
+              <label class="block mb-2 font-semibold text-gray-700">Search Places:</label>
+              <input
+                v-model="searchQuery"
+                type="text"
+                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Type to search places..."
+              />
+            </div>
+
             <!-- Dropdown for Place Selection -->
             <div v-for="(place, index) in currentFlextourist.places" :key="index" class="mb-4">
               <label :for="'edit-place-' + index" class="block mb-2 font-semibold text-gray-700">
@@ -147,7 +173,11 @@
                 class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="" disabled>Select a place</option>
-                <option v-for="placeOption in places" :key="placeOption.id" :value="placeOption.id">
+                <option
+                  v-for="placeOption in availablePlaces(index)"
+                  :key="placeOption.id"
+                  :value="placeOption.id"
+                >
                   {{ placeOption.name }}
                 </option>
               </select>
@@ -194,10 +224,18 @@ const isEditModalActive = ref(false)
 const flextourist = computed(() => store.flextourist || [])
 const places = ref([])
 const placesStore = usePlacesStore()
+const searchQuery = ref('')
 
 const currentFlextourist = ref({
   tourist_name: '',
   places: [{ place_id: null }]
+})
+
+const filteredPlaces = computed(() => {
+  if (!searchQuery.value) return places.value
+  return places.value.filter((place) =>
+    place.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+  )
 })
 
 function addPlaceField() {
@@ -226,23 +264,23 @@ function openAddModal() {
 }
 
 function openEditModal(flextourist) {
-  console.log('✏️ Editing Flextourist:', flextourist);
+  console.log('✏️ Editing Flextourist:', flextourist)
 
-  isEditModalActive.value = true;
+  isEditModalActive.value = true
 
   currentFlextourist.value = {
     id: flextourist.tourist_id || null,
     tourist_name: flextourist.tourist_name || '',
-    places: Array.isArray(flextourist.places) && flextourist.places.length > 0
-      ? flextourist.places.map(place => ({
-          place_id: Number(place.place_id) || null // ✅ ทำให้เป็น object เสมอ
-        }))
-      : [{ place_id: Number(flextourist.place_id) || null }] // ✅ รองรับกรณีที่ `place_id` อยู่นอก `places`
-  };
+    places:
+      Array.isArray(flextourist.places) && flextourist.places.length > 0
+        ? flextourist.places.map((place) => ({
+            place_id: Number(place.place_id) || null // ✅ ทำให้เป็น object เสมอ
+          }))
+        : [{ place_id: Number(flextourist.place_id) || null }] // ✅ รองรับกรณีที่ `place_id` อยู่นอก `places`
+  }
 
-  console.log('📋 Current Flextourist (Edit):', JSON.stringify(currentFlextourist.value, null, 2));
+  console.log('📋 Current Flextourist (Edit):', JSON.stringify(currentFlextourist.value, null, 2))
 }
-
 
 function closeAddModal() {
   isAddModalActive.value = false
@@ -312,26 +350,31 @@ async function saveAdd() {
 }
 
 async function saveEdit() {
-  console.log('🔄 Updating FlexTourist:', currentFlextourist.value);
-  console.log('🔄 [saveEdit] Attempting to update:', JSON.stringify(currentFlextourist.value, null, 2));
+  console.log('🔄 Updating FlexTourist:', currentFlextourist.value)
+  console.log(
+    '🔄 [saveEdit] Attempting to update:',
+    JSON.stringify(currentFlextourist.value, null, 2)
+  )
 
   if (!currentFlextourist.value.id) {
-    console.error('❌ Error: FlexTourist ID is required for updating.');
-    return;
+    console.error('❌ Error: FlexTourist ID is required for updating.')
+    return
   }
 
   const placesToUpdate =
-    currentFlextourist.value.places?.filter((place) => place.place_id)?.map((place) => place.place_id) || [];
+    currentFlextourist.value.places
+      ?.filter((place) => place.place_id)
+      ?.map((place) => place.place_id) || []
 
-  console.log('📤 Places to update:', placesToUpdate);
+  console.log('📤 Places to update:', placesToUpdate)
 
   if (placesToUpdate.length === 0) {
     Swal.fire({
       icon: 'warning',
       title: 'Validation Error',
       text: 'Please select at least one place.'
-    });
-    return;
+    })
+    return
   }
 
   try {
@@ -339,7 +382,7 @@ async function saveEdit() {
       id: currentFlextourist.value.id,
       tourist_name: currentFlextourist.value.tourist_name.trim(),
       places: placesToUpdate
-    });
+    })
 
     Swal.fire({
       icon: 'success',
@@ -347,17 +390,17 @@ async function saveEdit() {
       text: 'The Flextourist has been updated successfully.',
       timer: 2000,
       showConfirmButton: false
-    });
+    })
 
-    closeEditModal();
-    await store.fetchFlexTourist();
+    closeEditModal()
+    await store.fetchFlexTourist()
   } catch (error) {
-    console.error('❌ Error updating flextourist:', error);
+    console.error('❌ Error updating flextourist:', error)
     Swal.fire({
       icon: 'error',
       title: 'Error',
       text: error.response?.data || 'An error occurred while updating the flextourist.'
-    });
+    })
   }
 }
 
@@ -402,6 +445,18 @@ async function confirmDelete(tourist_id) {
       }
     }
   })
+}
+
+const selectedPlaceIds = computed(() =>
+  currentFlextourist.value.places.map((p) => p.place_id).filter((id) => id)
+)
+
+const availablePlaces = (index) => {
+  return filteredPlaces.value.filter(
+    (place) =>
+      !selectedPlaceIds.value.includes(place.id) ||
+      place.id === currentFlextourist.value.places[index].place_id
+  )
 }
 
 function formatDate(date) {

@@ -73,14 +73,14 @@
                 </td>
                 <td>
                   <a
-                    :href="place.image_link"
+                    :href="place.contact_link"
                     target="_blank"
                     class="text-blue-500 hover:underline"
-                    v-if="place.image_link"
+                    v-if="place.contact_link"
                   >
-                    {{ formatValue(place.image_link) }}
+                    {{ formatValue(place.contact_link) }}
                   </a>
-                  <span :class="!place.image_link ? 'text-red-500' : ''" v-else
+                  <span :class="!place.contact_link ? 'text-red-500' : ''" v-else
                     >No link available</span
                   >
                 </td>
@@ -474,6 +474,22 @@ async function saveAdd() {
     return
   }
 
+  // ✅ ตรวจสอบว่าชื่อซ้ำหรือไม่
+  const isDuplicate = places.value.some(
+    (place) => place.name.trim().toLowerCase() === currentPlaces.value.name.trim().toLowerCase()
+  )
+
+  if (isDuplicate) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Duplicate Place Name',
+      text: 'This place name already exists. Please use a different name.',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#FF5722'
+    })
+    return
+  }
+  
   if (currentPlaces.value.contact_link && !isValidURL(currentPlaces.value.contact_link)) {
     Swal.fire({
       icon: 'error',
@@ -626,15 +642,27 @@ function adjustHeight(event) {
 }
 
 const filteredPlaces = computed(() => {
-  return places.value.filter(place => {
-    const query = searchQuery.value.toLowerCase();
-    return (
-      place.name.toLowerCase().includes(query) ||
-      place.description.toLowerCase().includes(query) ||
-      place.address.toLowerCase().includes(query)
-    );
-  });
+  return places.value
+    .filter(place => {
+      const query = searchQuery.value.toLowerCase();
+      return (
+        place.name.toLowerCase().includes(query) ||
+        place.description.toLowerCase().includes(query) ||
+        place.address.toLowerCase().includes(query)
+      );
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.created_at).setHours(0, 0, 0, 0); // รีเซ็ตเวลาให้เทียบเฉพาะวันที่
+      const dateB = new Date(b.created_at).setHours(0, 0, 0, 0);
+
+      if (dateB !== dateA) {
+        return dateB - dateA; // เรียงจากวันที่ใหม่ไปเก่า
+      }
+
+      return a.name.localeCompare(b.name, 'th'); // ถ้าวันที่เท่ากันให้เรียงตามชื่อ ก-ฮ
+    });
 });
+
 
 
 function formatValue(value) {

@@ -2947,15 +2947,15 @@ const fetchFlexMessageWithPlace = async (intentName, dbClient) => {
   }
 };
 
-
 const createTouristFlexMessage = (data) => {
   const imageUrl = data.image_link?.startsWith("http")
     ? data.image_link
     : "https://via.placeholder.com/150";
 
-  const contactLink = data.contact_link?.startsWith("http")
-    ? data.contact_link
-    : "https://example.com";
+  const contactLink =
+    data.contact_link && data.contact_link.startsWith("http")
+      ? data.contact_link
+      : null;
 
   return {
     type: "bubble",
@@ -2989,20 +2989,6 @@ const createTouristFlexMessage = (data) => {
           margin: "lg",
           spacing: "sm",
           contents: [
-            {
-              type: "box",
-              layout: "baseline",
-              contents: [
-                {
-                  type: "text",
-                  text: data.tourist_name || "ไม่ระบุ",
-                  wrap: true,
-                  color: "#666666",
-                  size: "sm",
-                  flex: 5,
-                },
-              ],
-            },
             {
               type: "box",
               layout: "baseline",
@@ -3058,16 +3044,23 @@ const createTouristFlexMessage = (data) => {
           type: "button",
           style: "link",
           height: "sm",
-          action: {
-            type: "uri",
-            label: "ช่องทางการติดต่อ",
-            uri: contactLink,
-          },
+          action: contactLink
+            ? {
+                type: "uri",
+                label: "ช่องทางการติดต่อ",
+                uri: contactLink,
+              }
+            : {
+                type: "message",
+                label: "ไม่พบช่องทางการติดต่อ",
+                text: "ไม่พบช่องทางการติดต่อ",
+              },
         },
       ],
     },
   };
 };
+
 
 const sendFlexMessageToUser = async (userId, flexMessage) => {
   if (!userId || !flexMessage || !flexMessage.contents) {
@@ -3127,6 +3120,8 @@ const sendFlexMessageTourist = async (agent, intentName, dbClient) => {
 
   try {
     const data = await fetchFlexMessageWithPlace(intentName, dbClient);
+    console.log("🚀 Fetched Data:", data);
+
     if (!data || data.length === 0) {
       throw new Error("ไม่มีข้อมูลสำหรับคำถามนี้");
     }

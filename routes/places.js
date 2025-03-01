@@ -48,7 +48,8 @@ router.post("/", async (req, res) => {
   console.log("Received payload:", JSON.stringify(req.body, null, 2));
 
   try {
-    const places = req.body; // ควรเป็น Array ของสถานที่
+    // const places = req.body; // ควรเป็น Array ของสถานที่
+    const places = Array.isArray(req.body) ? req.body : [req.body]; 
 
     if (!Array.isArray(places) || places.length === 0) {
       return res.status(400).json({ error: "Invalid input: At least one place is required" });
@@ -120,7 +121,6 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 
 router.get("/:id", async (req, res) => {
   const { id } = req.params;

@@ -97,19 +97,8 @@ function createrestaurantFlexMessage() {
           {
             color: "#990099",
             action: {
-              text: "ร้านอาหารแต่ละอำเภอในขอนแก่น",
-              label: "ร้านอาหารแต่ละอำเภอในขอนแก่น",
-              type: "message",
-            },
-            style: "primary",
-            type: "button",
-            height: "sm",
-          },
-          {
-            color: "#990099",
-            action: {
               text: "ร้านอาหารอีสาน",
-              label: "ร้านอาหารอีสาน",
+              label: "อาหารอีสาน",
               type: "message",
             },
             style: "primary",
@@ -120,7 +109,7 @@ function createrestaurantFlexMessage() {
             color: "#990099",
             action: {
               text: "ร้านอาหารไทย",
-              label: "ร้านอาหารไทย",
+              label: "อาหารไทย",
               type: "message",
             },
             style: "primary",
@@ -131,7 +120,18 @@ function createrestaurantFlexMessage() {
             color: "#990099",
             action: {
               text: "ร้านอาหารโกอินเตอร์",
-              label: "ร้านอาหารโกอินเตอร์",
+              label: "อาหารโกอินเตอร์",
+              type: "message",
+            },
+            style: "primary",
+            type: "button",
+            height: "sm",
+          },
+          {
+            color: "#990099",
+            action: {
+              text: "ร้านอาหารประเภทอื่น",
+              label: "อาหารประเภทอื่น",
               type: "message",
             },
             style: "primary",

@@ -414,7 +414,11 @@ const thaiMonths = [
   "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
 ];
 
-const events = computed(() => store.event)
+const events = computed(() => {
+  return store.event.slice().sort((a, b) => {
+    return thaiMonths.indexOf(a.event_month) - thaiMonths.indexOf(b.event_month);
+  });
+});
 
 onMounted(() => {
   store.fetchEvent()
@@ -635,6 +639,8 @@ function showFullDescription(description) {
     confirmButtonColor: '#0277bd'
   })
 }
+
+
 </script>
 
 <style>

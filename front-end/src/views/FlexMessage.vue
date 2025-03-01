@@ -2,6 +2,17 @@
   <LayoutAuthenticated>
     <SectionMain>
       <SectionTitleLineWithButton :icon="mdiTableBorder" title="Flex Message" main />
+       <!-- 🔍 ช่องค้นหา -->
+       <div class="mb-4 flex justify-end">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="ค้นหาสถานที่..."
+          class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+
       <CardBox class="mb-6" has-table>
         <!-- Container for the button -->
         <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4">
@@ -27,7 +38,7 @@
               </tr>
             </thead>
             <tbody v-if="Array.isArray(flextourist) && flextourist.length > 0">
-              <tr v-for="(flextourist, index) in flextourist" :key="flextourist.id">
+              <tr v-for="(flextourist, index) in filteredFlexTourists" :key="flextourist.id">
                 <td>{{ index + 1 }}</td>
                 <td :class="!flextourist.tourist_name ? 'text-red-500' : ''">
                   {{ flextourist.tourist_name || 'No data available' }}
@@ -238,6 +249,7 @@ const filteredPlaces = computed(() => {
   )
 })
 
+
 function addPlaceField() {
   currentFlextourist.value.places.push({ place_id: '' })
 }
@@ -245,11 +257,10 @@ function addPlaceField() {
 onMounted(async () => {
   try {
     await store.fetchFlexTourist()
-    // console.log('📌 Flextourist data (after fetch):', JSON.stringify(flextourist.value, null, 2))
-
     await placesStore.fetchPlaces()
-    places.value = placesStore.places
-    // console.log('📌 Loaded places:', JSON.stringify(places.value, null, 2))
+    places.value = placesStore.places.sort((a, b) =>
+      a.name.localeCompare(b.name, 'th')
+    )    // console.log('📌 Loaded places:', JSON.stringify(places.value, null, 2))
   } catch (error) {
     console.error('❌ Error during onMounted:', error)
   }
@@ -458,6 +469,29 @@ const availablePlaces = (index) => {
       place.id === currentFlextourist.value.places[index].place_id
   )
 }
+
+const filteredFlexTourists = computed(() => {
+  if (!store.flextourist) return []
+
+  let filtered = store.flextourist.filter((tourist) => {
+    const query = searchQuery.value.toLowerCase()
+    return (
+      tourist.tourist_name.toLowerCase().includes(query) || 
+      (tourist.places && tourist.places.some((place) => place.name.toLowerCase().includes(query))) // ค้นหาสถานที่
+    )
+  })
+
+  filtered.sort((a, b) => {
+    if (a.tourist_name.toLowerCase() < b.tourist_name.toLowerCase()) return -1
+    if (a.tourist_name.toLowerCase() > b.tourist_name.toLowerCase()) return 1
+    return new Date(b.created_at) - new Date(a.created_at) // เรียงวันที่ใหม่ล่าสุดก่อน
+  })
+
+  return filtered
+})
+
+
+
 
 function formatDate(date) {
   return date ? new Date(date).toLocaleDateString() : 'No date available'

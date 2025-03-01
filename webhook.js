@@ -1355,7 +1355,6 @@ const fetchHTMLAndSaveToJSON11 = async (url, outputFilePath) => {
               .attr("data-lzl-srcset") ||
             "ไม่มีรูปภาพ";
 
-          // ถ้ามี srcset (หลายรูปแบบ) ให้เลือกเฉพาะ URL แรก
           if (imageSrc.includes(",")) {
             imageSrc = imageSrc.split(",")[0].split(" ")[0].trim();
           }
@@ -2214,7 +2213,7 @@ const sendImageDatailMessage = async (
       placeData.name,
       imageUrls,
       answerText,
-      imageDetail, 
+      imageDetail,
       placeData.contact_link
     );
 
@@ -2378,7 +2377,7 @@ const getEventByName = async (eventName, dbClient) => {
     const values = [eventName.trim()];
 
     console.log("📌 ค่าที่ Query:", values);
-    
+
     const { rows } = await dbClient.query(query, values);
 
     if (rows.length === 0) {
@@ -2451,11 +2450,13 @@ const eventByName = async (agent, dbClient) => {
         responseMessage.event_name &&
         !responseMessage.event_name.includes("❌ ไม่พบข้อมูล")
       ) {
-        console.log(`✅ พบอีเว้นต์ที่มีค่าความเหมือน: ${responseMessage.similarity_score}`);
+        console.log(
+          `✅ พบอีเว้นต์ที่มีค่าความเหมือน: ${responseMessage.similarity_score}`
+        );
         dataFound = true;
       }
     }
-    
+
     if (!dataFound) {
       let month = new Date().toLocaleString("th-TH", { month: "long" });
       console.log(
@@ -2930,19 +2931,28 @@ const fetchFlexMessageWithPlace = async (intentName, dbClient) => {
 
   try {
     const { rows } = await dbClient.query(query, values);
-    if (rows.length === 0) throw new Error("No data found for the given intent.");
+    if (rows.length === 0)
+      throw new Error("No data found for the given intent.");
 
     return rows.map((row) => {
-      const validImage = row.image_links?.find((link) => link?.startsWith("http")) || null;
+      const validImage =
+        row.image_links?.find((link) => link?.startsWith("http")) || null;
       return {
         ...row,
-        contact_link: row.contact_link?.startsWith("http") ? row.contact_link : null,
+        contact_link: row.contact_link?.startsWith("http")
+          ? row.contact_link
+          : null,
         image_link: validImage, // ใช้เฉพาะรูปแรกที่ใช้งานได้
-        image_detail: row.image_details?.[row.image_links?.indexOf(validImage)] || "รายละเอียดไม่ระบุ",
+        image_detail:
+          row.image_details?.[row.image_links?.indexOf(validImage)] ||
+          "รายละเอียดไม่ระบุ",
       };
     });
   } catch (error) {
-    console.error("Error fetching tourist destinations with places:", error.message);
+    console.error(
+      "Error fetching tourist destinations with places:",
+      error.message
+    );
     throw error;
   }
 };
@@ -3061,7 +3071,6 @@ const createTouristFlexMessage = (data) => {
   };
 };
 
-
 const sendFlexMessageToUser = async (userId, flexMessage) => {
   if (!userId || !flexMessage || !flexMessage.contents) {
     throw new Error("Invalid userId or flexMessage");
@@ -3116,6 +3125,74 @@ const sendFlexMessageTourist = async (agent, intentName, dbClient) => {
     );
     agent.add("⚠️ ไม่สามารถเชื่อมต่อฐานข้อมูล กรุณาลองใหม่อีกครั้ง.");
     return;
+  }
+
+  const isanKeywords = [
+    "อาหารอีสาน",
+    "อีสาน",
+    "ไก่ย่าง",
+    "ลาบ",
+    "ก้อย",
+    "แกงอ่อม",
+    "ตำบักหุ่ง",
+    "ตำปูปลาร้า",
+    "แจ่ว",
+    "ต้มแซ่บ",
+    "หมก",
+    "ป่น",
+    "ข้าวจี่",
+    "ข้าวเหนียว",
+    "อ่อม",
+    "ซุปหน่อไม้",
+  ];
+  const thaiKeywords = ["อาหารไทย", "อาหารไทยแท้", "ไทย"];
+  const ItaliaKeywords = [
+    "อาหารจีน",
+    "อาหารอิตาเลี่ยน",
+    "อาหารอินเตอร์",
+    "อาหารต่างชาติ",
+    "จีน",
+    "อิตาเลี่ยน",
+    "อินเตอร์",
+    "ต่างชาติ",
+  ];
+  const OtherKeywords = [
+    "อาหารพวกเส้น",
+    "เส้น",
+    "อาหารริมทาง",
+    "อาหารสตรีทฟู้ด",
+    "สตรีทฟู้ด",
+    "อาหารจานเดียว",
+    "อาหารทั่วไป",
+  ];
+  const MichelinKeywords = ["Michelin", "มิชลินไกด์", "มิชลิน"];
+  const RecommentKeywords = [
+    "อาหารยอดฮิต",
+    "อาหารดัง",
+    "อาหารกระแส",
+    "ร้านอาหารดัง",
+    "อาหารสุดฮิต",
+  ];
+
+  const isanRegex = new RegExp(isanKeywords.join("|"), "i");
+  const thaiRegex = new RegExp(thaiKeywords.join("|"), "i");
+  const ItaliaRegex = new RegExp(ItaliaKeywords.join("|"), "i");
+  const OtherRegex = new RegExp(OtherKeywords.join("|"), "i");
+  const MichelinRegex = new RegExp(MichelinKeywords.join("|"), "i");
+  const RecommentRegex = new RegExp(RecommentKeywords.join("|"), "i");
+
+  if (isanRegex.test(questionText)) {
+    intentName = "ประเภทอาหารอีสาน";
+  } else if (thaiRegex.test(questionText)) {
+    intentName = "ประเภทอาหารไทย";
+  } else if (OtherRegex.test(questionText)) {
+    intentName = "ประเภทอาหารทั่วไป";
+  } else if (ItaliaRegex.test(questionText)) {
+    intentName = "ประเภทอาหารอินเตอร์";
+  } else if (MichelinRegex.test(questionText)) {
+    intentName = "อาหารระดับมิชลินไกด์";
+  } else if (RecommentRegex.test(questionText)) {
+    intentName = "ร้านอาหารดังยอดฮิต";
   }
 
   try {
@@ -3191,7 +3268,7 @@ const sendFlexMessageTourist = async (agent, intentName, dbClient) => {
 };
 
 const synonymMap = {
-  "เดอะนัวหมูกระทะบุฟเฟต์": [
+  เดอะนัวหมูกระทะบุฟเฟต์: [
     "เดอะนัวหมูกระทะบุฟเฟต์",
     "เดอะนัว",
     "เดอะนัว หมูกระทะบุฟเฟต์",
@@ -3884,14 +3961,9 @@ const handleWebhookRequest = async (req, res, dbClient) => {
       await sendLocationBasedOnQuestion(agent, dbClient, location);
     });
 
-    intentMap.set("ร้านอาหารดังยอดฮิต", async (agent) => {
-      try {
-        await sendFlexMessage(agent, "restaurant", dbClient);
-      } catch (error) {
-        console.error("Error handling 'เที่ยวขอนแก่น' intent:", error);
-        agent.add("ขออภัย, เกิดข้อผิดพลาดขณะประมวลผลคำขอของคุณ.");
-      }
-    });
+    intentMap.set("ร้านอาหารดังยอดฮิต", (agent) =>
+      sendFlexMessageTourist(agent, "ประเภทอาหารไทย", dbClient)
+    );
 
     intentMap.set("เลือกอำเภอ", async (agent) => {
       try {

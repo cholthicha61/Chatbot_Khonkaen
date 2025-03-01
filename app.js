@@ -168,7 +168,6 @@ app.use((req, res, next) => {
 app.post("/webhook", (req, res) => {
   handleWebhookRequest(req, res, client);
 });
-
 app.get("/api/data", (req, res) => {
   res.json({ message: "Hello from Node.js backend!" });
 });

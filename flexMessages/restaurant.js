@@ -130,8 +130,8 @@ function createrestaurantFlexMessage() {
           {
             color: "#990099",
             action: {
-              text: "ร้านอาหารประเภทอื่น",
-              label: "อาหารประเภทอื่น",
+              text: "อาหารริมทาง",
+              label: "ร้านอาหารริมทาง",
               type: "message",
             },
             style: "primary",

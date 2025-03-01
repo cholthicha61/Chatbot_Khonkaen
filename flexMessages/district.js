@@ -153,7 +153,7 @@ function createDistrictFlexMessage() {
         aspectMode: "cover",
         type: "image",
         size: "full",
-        url: "https://s359.kapook.com/pagebuilder/9e8a4cb1-cc1a-40f3-846b-b82e9871b1a8.jpg",
+        url: "https://github.com/cholthicha61/Picture/blob/main/12.png?raw=true",
         action: {
           label: "Line",
           uri: "https://linecorp.com/",
@@ -196,7 +196,7 @@ function createDistrictFlexMessage() {
             contents: [],
             type: "text",
             align: "start",
-            text: "ขอบคุณภาพจาก : K@POOK!",
+            text: "จิ้มด่างล่างได้เลย!!",
             margin: "xxl",
           },
         ],

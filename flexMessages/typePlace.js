@@ -1,7 +1,12 @@
 const { Payload } = require("dialogflow-fulfillment");
 
 const sendTouristFlexMessage = (agent, questionText) => {
-  console.log("Question Text:", questionText);
+  if (!questionText || typeof questionText !== "string") {
+    console.error("Error: questionText is undefined, null, or not a string.");
+    agent.add("ขออภัย ไม่พบข้อมูลที่คุณต้องการ");
+    return;
+  }
+
   const flexMessages = {
     mountain: {
       altText: "เที่ยวภูเขา",
@@ -4537,7 +4542,7 @@ const sendTouristFlexMessage = (agent, questionText) => {
       type: "flex",
     },
   };
-  if (questionText.includes("ภูเขา")) {
+  if (questionText.includes("ภูเขา") && flexMessages.mountain) {
     agent.add(
       new Payload(agent.LINE, flexMessages.mountain, { sendAsMessage: true })
     );
@@ -4570,6 +4575,7 @@ const sendTouristFlexMessage = (agent, questionText) => {
       new Payload(agent.LINE, flexMessages.shopping, { sendAsMessage: true })
     );
   } else {
+    console.warn("No matching location found for:", questionText);
     agent.add("ขออภัย ไม่พบข้อมูลสถานที่นี้");
   }
 };

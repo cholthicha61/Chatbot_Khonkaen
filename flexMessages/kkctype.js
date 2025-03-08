@@ -26,8 +26,8 @@ function createkkutypeFlexMessage() {
               style: "primary",
               action: {
                 type: "message",
-                text: "ภูเขา",
-                label: "ภูเขา",
+                text: "แหล่งท่องเที่ยวทางธรรมชาติ",
+                label: "แหล่งท่องเที่ยวทางธรรมชาติ",
               },
               color: "#3399FF",
             },
@@ -43,9 +43,9 @@ function createkkutypeFlexMessage() {
               contents: [
                 {
                   action: {
-                    text: "สวนสัตว์",
+                    text: "แหล่งท่องเที่ยวประเภทน้ำตก",
                     type: "message",
-                    label: "สวนสัตว์",
+                    label: "แหล่งท่องเที่ยวประเภทน้ำตก",
                   },
                   type: "button",
                   color: "#3399FF",
@@ -69,9 +69,9 @@ function createkkutypeFlexMessage() {
                   color: "#3399FF",
                   style: "primary",
                   action: {
-                    label: "อุทยานแห่งชาติ",
+                    label: "แหล่งท่องเที่ยวเพื่อนันทนาการ",
                     type: "message",
-                    text: "อุทยานแห่งชาติ",
+                    text: "แหล่งท่องเที่ยวเพื่อนันทนาการ",
                   },
                   height: "sm",
                   type: "button",
@@ -96,8 +96,8 @@ function createkkutypeFlexMessage() {
                   style: "primary",
                   action: {
                     type: "message",
-                    text: "วัด",
-                    label: "วัด",
+                    text: "แหล่งท่องเที่ยวทางวัฒนธรรมและประวัติศาสตร์",
+                    label: "แหล่งท่องเที่ยวทางวัฒนธรรมและประวัติศาสตร์",
                   },
                   height: "sm",
                 },
@@ -121,8 +121,8 @@ function createkkutypeFlexMessage() {
                   height: "sm",
                   action: {
                     type: "message",
-                    label: "พิพิธภัณฑ์",
-                    text: "พิพิธภัณฑ์",
+                    label: "แหล่งท่องเที่ยวทางศาสนา",
+                    text: "แหล่งท่องเที่ยวทางศาสนา",
                   },
                 },
                 {
@@ -144,9 +144,9 @@ function createkkutypeFlexMessage() {
                   height: "sm",
                   type: "button",
                   action: {
-                    label: "สวนน้ำ",
+                    label: "แหล่งท่องเที่ยวสำหรับช็อปปิ้ง",
                     type: "message",
-                    text: "เล่นน้ำ",
+                    text: "แหล่งท่องเที่ยวสำหรับช็อปปิ้ง",
                   },
                 },
                 {
@@ -156,55 +156,7 @@ function createkkutypeFlexMessage() {
                   type: "box",
                 },
               ],
-            },
-            {
-              layout: "vertical",
-              type: "box",
-              contents: [
-                {
-                  color: "#3399FF",
-                  style: "primary",
-                  action: {
-                    text: "สวนสาธารณะ",
-                    type: "message",
-                    label: "สวนสาธารณะ",
-                  },
-                  type: "button",
-                  height: "sm",
-                },
-                {
-                  layout: "vertical",
-                  contents: [],
-                  type: "box",
-                  margin: "sm",
-                },
-              ],
-              spacing: "sm",
-            },
-            {
-              contents: [
-                {
-                  color: "#3399FF",
-                  style: "primary",
-                  height: "sm",
-                  action: {
-                    text: "ช็อปปิ้ง",
-                    type: "message",
-                    label: "ช็อปปิ้ง",
-                  },
-                  type: "button",
-                },
-                {
-                  type: "box",
-                  contents: [],
-                  spacing: "sm",
-                  layout: "vertical",
-                },
-              ],
-              layout: "vertical",
-              type: "box",
-              spacing: "sm",
-            },
+            }
           ],
           layout: "vertical",
           spacing: "sm",

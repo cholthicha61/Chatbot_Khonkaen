@@ -11,11 +11,22 @@ function createDistrictFlexMessage() {
           {
             style: "primary",
             height: "sm",
-            color: "#6666FF",
+            color: "#9999FF",
             type: "button",
             action: {
               label: "อำเภอเมือง ",
               text: "อำเภอเมือง",
+              type: "message",
+            },
+          },
+          {
+            style: "primary",
+            height: "sm",
+            color: "#9999FF",
+            type: "button",
+            action: {
+              label: "อำเภออุบลรัตน์",
+              text: "อำเภออุบลรัตน์",
               type: "message",
             },
           },
@@ -26,20 +37,9 @@ function createDistrictFlexMessage() {
               label: "อำเภอน้ำพอง",
             },
             style: "primary",
-            color: "#6666FF",
+            color: "#9999FF",
             type: "button",
             height: "sm",
-          },
-          {
-            style: "primary",
-            height: "sm",
-            type: "button",
-            color: "#6666FF",
-            action: {
-              label: "อำเภอสีชมพู",
-              text: "อำเภอสีชมพู",
-              type: "message",
-            },
           },
           {
             height: "sm",
@@ -49,7 +49,7 @@ function createDistrictFlexMessage() {
               type: "message",
               label: "อำเภอภูเวียง",
             },
-            color: "#6666FF",
+            color: "#9999FF",
             style: "primary",
           },
           {
@@ -60,7 +60,7 @@ function createDistrictFlexMessage() {
             },
             type: "button",
             style: "primary",
-            color: "#6666FF",
+            color: "#9999FF",
             height: "sm",
           },
           {
@@ -70,7 +70,7 @@ function createDistrictFlexMessage() {
               type: "message",
               label: "อำเภอชุมแพ",
             },
-            color: "#6666FF",
+            color: "#9999FF",
             style: "primary",
             type: "button",
           },
@@ -82,13 +82,13 @@ function createDistrictFlexMessage() {
             },
             height: "sm",
             style: "primary",
-            color: "#6666FF",
+            color: "#9999FF",
             type: "button",
           },
           {
             height: "sm",
             type: "button",
-            color: "#6666FF",
+            color: "#9999FF",
             action: {
               text: "อำเภอเปือยน้อย",
               type: "message",
@@ -97,7 +97,7 @@ function createDistrictFlexMessage() {
             style: "primary",
           },
           {
-            color: "#6666FF",
+            color: "#9999FF",
             height: "sm",
             type: "button",
             style: "primary",
@@ -116,11 +116,11 @@ function createDistrictFlexMessage() {
             type: "button",
             height: "sm",
             style: "primary",
-            color: "#6666FF",
+            color: "#9999FF",
           },
           {
             type: "button",
-            color: "#6666FF",
+            color: "#9999FF",
             style: "primary",
             action: {
               type: "message",
@@ -138,7 +138,7 @@ function createDistrictFlexMessage() {
               type: "message",
               label: "อำเภอบ้านฝาง",
             },
-            color: "#6666FF",
+            color: "#9999FF",
           },
           {
             size: "sm",

@@ -2,7 +2,7 @@
   <LayoutAuthenticated>
     <SectionMain>
       <SectionTitleLineWithButton :icon="mdiTableBorder" title="Places" main />
-      
+
       <!-- 🔍 ช่องค้นหา -->
       <div class="mb-4 flex justify-end">
         <input
@@ -35,6 +35,7 @@
                 <th class="px-4 py-2 text-left">Description</th>
                 <th class="px-4 py-2 text-left">Admission Fee</th>
                 <th class="px-4 py-2 text-left">Opening Hours</th>
+                <th class="px-4 py-2 text-left">Address</th>
                 <th class="px-4 py-2 text-left">Contact Link</th>
                 <th class="px-4 py-2 text-left">Image Link</th>
                 <th class="px-4 py-2 text-left">Created</th>
@@ -50,8 +51,8 @@
                 </td>
 
                 <td :class="!place.description ? 'text-red-500' : ''">
-                  <div v-if="place.description && place.description.length > 50">
-                    {{ place.description.slice(0, 50) }}...
+                  <div v-if="place.description && place.description.length > 20">
+                    {{ place.description.slice(0, 20) }}...
                     <BaseButton
                       color="primary"
                       small
@@ -65,12 +66,52 @@
                 </td>
 
                 <td :class="!place.admission_fee ? 'text-red-500' : ''">
-                  {{ place.admission_fee || 'No data available' }}
+                  <div v-if="place.admission_fee && place.admission_fee.length > 20">
+                    {{ place.admission_fee.slice(0, 20) }}...
+                    <BaseButton
+                      color="primary"
+                      small
+                      label="See more"
+                      @click="showFullAdmissionFee(place.admission_fee)"
+                    />
+                  </div>
+                  <div v-else>
+                    {{ place.admission_fee || 'No data available' }}
+                  </div>
                 </td>
 
+       
                 <td :class="!place.opening_hours ? 'text-red-500' : ''">
-                  {{ formatValue(place.opening_hours) }}
+                  <div v-if="place.opening_hours && place.opening_hours.length > 20">
+                    {{ place.opening_hours.slice(0, 20) }}...
+                    <BaseButton
+                      color="primary"
+                      small
+                      label="See more"
+                      @click="showFullOpeningHours(place.opening_hours)"
+                    />
+                  </div>
+                  <div v-else>
+                    {{ place.opening_hours || 'No data available' }}
+                  </div>
                 </td>
+
+                <td :class="!place.address ? 'text-red-500' : ''">
+                  <div v-if="place.address && place.address.length > 20">
+                    {{ place.address.slice(0, 20) }}...
+                    <BaseButton
+                      color="primary"
+                      small
+                      label="See more"
+                      @click="showFullAddress(place.address)"
+                    />
+                  </div>
+                  <div v-else>
+                    {{ place.address || 'No data available' }}
+                  </div>
+                </td>
+
+                
                 <td>
                   <a
                     :href="place.contact_link"
@@ -226,8 +267,11 @@
             <div class="mb-4">
               <label class="block mb-2 font-semibold text-gray-700"> Images: </label>
 
-              <div v-for="(image, index) in currentPlaces.images" :key="index" class="flex items-center space-x-2 mb-4">
-
+              <div
+                v-for="(image, index) in currentPlaces.images"
+                :key="index"
+                class="flex items-center space-x-2 mb-4"
+              >
                 <input
                   v-model="image.image_link"
                   type="text"
@@ -240,7 +284,12 @@
                   class="w-full p-2 border border-gray-300 rounded-lg"
                   placeholder="Enter image detail"
                 />
-                <BaseButton color="danger" small :icon="mdiTrashCanOutline" @click="removeImage(index)" />
+                <BaseButton
+                  color="danger"
+                  small
+                  :icon="mdiTrashCanOutline"
+                  @click="removeImage(index)"
+                />
               </div>
 
               <!-- แยกปุ่มให้อยู่ด้านล่าง -->
@@ -355,8 +404,11 @@
             <div class="mb-4">
               <label class="block mb-2 font-semibold text-gray-700"> Images: </label>
 
-              <div v-for="(image, index) in currentPlaces.images" :key="index" class="flex items-center space-x-2 mb-4">
-
+              <div
+                v-for="(image, index) in currentPlaces.images"
+                :key="index"
+                class="flex items-center space-x-2 mb-4"
+              >
                 <input
                   v-model="image.image_link"
                   type="text"
@@ -369,7 +421,12 @@
                   class="w-full p-2 border border-gray-300 rounded-lg"
                   placeholder="Enter image detail"
                 />
-                <BaseButton color="danger" small :icon="mdiTrashCanOutline" @click="removeImage(index)" />
+                <BaseButton
+                  color="danger"
+                  small
+                  :icon="mdiTrashCanOutline"
+                  @click="removeImage(index)"
+                />
               </div>
 
               <!-- แยกปุ่มให้อยู่ด้านล่าง -->
@@ -390,7 +447,7 @@
 </template>
 
 <script setup>
-import { mdiTableBorder, mdiPencil, mdiTrashCan, mdiPlus,mdiTrashCanOutline } from '@mdi/js'
+import { mdiTableBorder, mdiPencil, mdiTrashCan, mdiPlus, mdiTrashCanOutline } from '@mdi/js'
 import SectionMain from '@/components/SectionMain.vue'
 import CardBox from '@/components/CardBox.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
@@ -414,7 +471,7 @@ const currentPlaces = ref({
   opening_hours: '',
   address: '',
   contact_link: '',
-  images: [] 
+  images: []
 })
 
 const places = computed(() => store.places)
@@ -489,7 +546,7 @@ async function saveAdd() {
     })
     return
   }
-  
+
   if (currentPlaces.value.contact_link && !isValidURL(currentPlaces.value.contact_link)) {
     Swal.fire({
       icon: 'error',
@@ -530,6 +587,36 @@ async function saveAdd() {
       text: error.response ? error.response.data : 'There was a problem adding the place.'
     })
   }
+}
+
+function showFullAdmissionFee(admissionFee) {
+  Swal.fire({
+    title: 'Full Admission Fee',
+    text: admissionFee,
+    icon: 'info',
+    confirmButtonText: 'Close',
+    confirmButtonColor: '#0277bd'
+  })
+}
+
+function showFullOpeningHours(OpeningHours) {
+  Swal.fire({
+    title: 'Full OpeningHours',
+    text: OpeningHours,
+    icon: 'info',
+    confirmButtonText: 'Close',
+    confirmButtonColor: '#0277bd'
+  })
+}
+
+function showFullAddress(address) {
+  Swal.fire({
+    title: 'Full Address',
+    text: address,
+    icon: 'info',
+    confirmButtonText: 'Close',
+    confirmButtonColor: '#0277bd'
+  })
 }
 
 async function saveEdit() {
@@ -643,27 +730,25 @@ function adjustHeight(event) {
 
 const filteredPlaces = computed(() => {
   return places.value
-    .filter(place => {
-      const query = searchQuery.value.toLowerCase();
+    .filter((place) => {
+      const query = searchQuery.value.toLowerCase()
       return (
         place.name.toLowerCase().includes(query) ||
         place.description.toLowerCase().includes(query) ||
         place.address.toLowerCase().includes(query)
-      );
+      )
     })
     .sort((a, b) => {
-      const dateA = new Date(a.created_at).setHours(0, 0, 0, 0); // รีเซ็ตเวลาให้เทียบเฉพาะวันที่
-      const dateB = new Date(b.created_at).setHours(0, 0, 0, 0);
+      const dateA = new Date(a.created_at).setHours(0, 0, 0, 0) // รีเซ็ตเวลาให้เทียบเฉพาะวันที่
+      const dateB = new Date(b.created_at).setHours(0, 0, 0, 0)
 
       if (dateB !== dateA) {
-        return dateB - dateA; // เรียงจากวันที่ใหม่ไปเก่า
+        return dateB - dateA // เรียงจากวันที่ใหม่ไปเก่า
       }
 
-      return a.name.localeCompare(b.name, 'th'); // ถ้าวันที่เท่ากันให้เรียงตามชื่อ ก-ฮ
-    });
-});
-
-
+      return a.name.localeCompare(b.name, 'th') // ถ้าวันที่เท่ากันให้เรียงตามชื่อ ก-ฮ
+    })
+})
 
 function formatValue(value) {
   return value || 'No data available'
@@ -682,6 +767,7 @@ function showFullDescription(description) {
     confirmButtonColor: '#0277bd'
   })
 }
+
 </script>
 
 <style>

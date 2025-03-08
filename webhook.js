@@ -17,8 +17,6 @@ const client = new line.Client({
 });
 
 const { createDistrictFlexMessage } = require("./flexMessages/district");
-const createTypeplacesFlexMessage = require("./flexMessages/typePlace");
-const createDistrictTypeFlexMessage = require("./flexMessages/districtType");
 const { createrestaurantFlexMessage } = require("./flexMessages/restaurant");
 const { createkkutypeFlexMessage } = require("./flexMessages/kkctype");
 const locations = require("./flexMessages/locations");
@@ -77,12 +75,12 @@ const ensureUserExists = async (lineId, dbClient) => {
   try {
     if (!lineId) {
       console.warn("⚠️ Invalid lineId received: null or undefined.");
-      return null; // Return null instead of proceeding
+      return null;
     }
 
     let user = await getUserIdFromLineId(lineId, dbClient);
     if (user) {
-      return user; // ✅ If user exists, return the ID
+      return user;
     }
 
     console.log(`ℹ️ User not found, creating new user for lineId: ${lineId}`);
@@ -272,6 +270,8 @@ const getUserProfile = async (lineId) => {
       }
     );
 
+    // console.log("API Response:", response.data); // Debugging response
+
     if (!response.data.userId) {
       console.error("No userId found in the profile response.");
       return null;
@@ -297,7 +297,7 @@ const fetchHTMLAndSaveToJSON1 = async (url, outputFilePath) => {
   try {
     // console.log(`Fetching HTML from: ${url}`);
     const { data: html } = await axios.get(url);
-    console.log("Fetched HTML successfully.");
+    // console.log("Fetched HTML successfully.");
 
     const $ = cheerio.load(html);
     let results = [];
@@ -376,7 +376,7 @@ const fetchHTMLAndSaveToJSON1 = async (url, outputFilePath) => {
     }
 
     fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2), "utf8");
-    console.log(`Data saved to ${outputFilePath}`);
+    // console.log(`Data saved to ${outputFilePath}`);
   } catch (error) {
     console.error("Error fetching and saving data:", error);
   }
@@ -469,7 +469,7 @@ const fetchHTMLAndSaveToJSON2 = async (url, outputFilePath) => {
     }
 
     fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2), "utf8");
-    console.log(`Data saved to ${outputFilePath}`);
+    // console.log(`Data saved to ${outputFilePath}`);
   } catch (error) {
     console.error("Error fetching and saving data:", error);
   }
@@ -484,7 +484,7 @@ const fetchHTMLAndSaveToJSON3 = async (url, outputFilePath) => {
   try {
     // console.log(`Fetching HTML from: ${url}`);
     const { data: html } = await axios.get(url);
-    console.log("Fetched HTML successfully.");
+    // console.log("Fetched HTML successfully.");
 
     const $ = cheerio.load(html);
     let results = [];
@@ -552,7 +552,7 @@ const fetchHTMLAndSaveToJSON3 = async (url, outputFilePath) => {
     }
 
     fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2), "utf8");
-    console.log(`Data saved to ${outputFilePath}`);
+    // console.log(`Data saved to ${outputFilePath}`);
   } catch (error) {
     console.error("Error fetching and saving data:", error);
   }
@@ -571,7 +571,7 @@ const fetchHTMLAndSaveToJSON4 = async (url, outputFilePath) => {
   try {
     // console.log(`Fetching HTML from: ${url}`);
     const { data: html } = await axios.get(url);
-    console.log("Fetched HTML successfully.");
+    // console.log("Fetched HTML successfully.");
 
     const $ = cheerio.load(html);
     let results = [];
@@ -636,7 +636,7 @@ const fetchHTMLAndSaveToJSON4 = async (url, outputFilePath) => {
     }
 
     fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2), "utf8");
-    console.log(`Data saved to ${outputFilePath}`);
+    // console.log(`Data saved to ${outputFilePath}`);
   } catch (error) {
     console.error("Error fetching and saving data:", error);
   }
@@ -650,7 +650,7 @@ fetchHTMLAndSaveToJSON4(
 const fetchHTMLAndSaveToJSON5 = async (url, outputFilePath) => {
   try {
     const { data: html } = await axios.get(url);
-    console.log("Fetched HTML successfully.");
+    // console.log("Fetched HTML successfully.");
 
     const $ = cheerio.load(html);
 
@@ -739,7 +739,7 @@ const fetchHTMLAndSaveToJSON5 = async (url, outputFilePath) => {
     }
 
     fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2), "utf8");
-    console.log(`Data saved to ${outputFilePath}`);
+    // console.log(`Data saved to ${outputFilePath}`);
   } catch (error) {
     console.error("Error fetching and saving data:", error);
   }
@@ -808,14 +808,14 @@ const fetchHTMLAndSaveToJSON6 = async (url, outputFilePath) => {
     }
 
     fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2), "utf8");
-    console.log(`Data saved to ${outputFilePath}`);
+    // console.log(`Data saved to ${outputFilePath}`);
   } catch (error) {
     console.error("Error fetching and saving data:", error);
   }
 };
 
 fetchHTMLAndSaveToJSON6(
-  "https://www.tripgether.com/%E0%B8%AD%E0%B8%B1%E0%B8%9B%E0%B9%80%E0%B8%94%E0%B8%95%E0%B9%80%E0%B8%A3%E0%B8%B7%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B9%80%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%A2%E0%B8%A7/11-%E0%B8%84%E0%B8%B2%E0%B9%80%E0%B8%9F%E0%B9%88%E0%B8%82%E0%B8%AD%E0%B8%99%E0%B9%81%E0%B8%81%E0%B9%88%E0%B8%99-%E0%B9%83%E0%B8%99%E0%B9%80%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%87/",
+  "https://today.line.me/th/v2/article/GglxkVL",
   "./data/cafe3.json"
 );
 
@@ -911,7 +911,7 @@ const fetchHTMLAndSaveToJSON7 = async (url, outputFilePath) => {
     }
 
     fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2), "utf8");
-    console.log(`Data saved to ${outputFilePath}`);
+    // console.log(`Data saved to ${outputFilePath}`);
   } catch (error) {
     console.error("Error fetching and saving data:", error);
   }
@@ -926,7 +926,7 @@ const fetchHTMLAndSaveToJSON8 = async (url, outputFilePath) => {
   try {
     // console.log(`Fetching HTML from: ${url}`);
     const { data: html } = await axios.get(url);
-    console.log("Fetched HTML successfully.");
+    // console.log("Fetched HTML successfully.");
 
     const $ = cheerio.load(html);
     let results = [];
@@ -1129,7 +1129,7 @@ const fetchHTMLAndSaveToJSON8 = async (url, outputFilePath) => {
     }
 
     fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2), "utf8");
-    console.log(`Data saved to ${outputFilePath}`);
+    // console.log(`Data saved to ${outputFilePath}`);
   } catch (error) {
     console.error("Error fetching and saving data:", error);
   }
@@ -1144,7 +1144,7 @@ const fetchHTMLAndSaveToJSON9 = async (url, outputFilePath) => {
   try {
     // console.log(`Fetching HTML from: ${url}`);
     const { data: html } = await axios.get(url);
-    console.log("Fetched HTML successfully.");
+    // console.log("Fetched HTML successfully.");
 
     const $ = cheerio.load(html);
     let results = [];
@@ -1209,7 +1209,7 @@ const fetchHTMLAndSaveToJSON9 = async (url, outputFilePath) => {
     }
 
     fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2), "utf8");
-    console.log(`Data saved to ${outputFilePath}`);
+    // console.log(`Data saved to ${outputFilePath}`);
   } catch (error) {
     console.error("Error fetching and saving data:", error);
   }
@@ -1307,7 +1307,7 @@ const fetchHTMLAndSaveToJSON10 = async (url, outputFilePath) => {
     }
 
     fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2), "utf8");
-    console.log(`Data saved to ${outputFilePath}`);
+    // console.log(`Data saved to ${outputFilePath}`);
   } catch (error) {
     console.error("Error fetching and saving data:", error);
   }
@@ -1401,7 +1401,7 @@ const fetchHTMLAndSaveToJSON11 = async (url, outputFilePath) => {
     }
 
     fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2), "utf8");
-    console.log(`Data saved to ${outputFilePath}`);
+    // console.log(`Data saved to ${outputFilePath}`);
   } catch (error) {
     console.error("🚨 Error fetching and saving data:", error);
   }
@@ -2084,12 +2084,10 @@ const createFlexDatabaseDetailMessage = (
     const defaultImageUrl =
       "https://cloud-atg.moph.go.th/quality/sites/default/files/default_images/default.png";
 
-    // ถ้าไม่มีภาพให้ใช้รูป default
     if (!Array.isArray(imageUrls) || imageUrls.length === 0) {
       imageUrls = [defaultImageUrl];
     }
 
-    // 🔹 Hero Message (ข้อความรายละเอียด)
     const textBubble = {
       type: "bubble",
       body: {
@@ -2105,31 +2103,46 @@ const createFlexDatabaseDetailMessage = (
           },
           {
             type: "text",
-            text: `ที่มา: ${imageDetail || "ไม่ระบุ"}`, // 🔥 ใช้ imageDetail เป็นที่มา
+            text: `ที่มา: ${imageDetail || "ไม่ระบุ"}`,
             wrap: true,
             size: "sm",
             color: "#aaaaaa",
             margin: "md",
           },
+          {
+            type: "box",
+            layout: "horizontal",
+            margin: "md",
+            contents: [
+              {
+                type: "button",
+                style: "primary",
+                color: "#9966FF",
+                action: {
+                  type: "uri",
+                  label: contact_link ? "ติดต่อเรา" : "ไม่พบช่องทางการติดต่อ",
+                  uri: contact_link || "#",
+                },
+              },
+            ],
+          },
         ],
       },
     };
-
-    // 🔹 Image Gallery (แสดงรูปภาพแนวนอน)
     const imageBubbles = imageUrls.map((img) => ({
       type: "bubble",
       hero: {
         type: "image",
         url: img,
         size: "full",
-        aspectRatio: "16:9",
+        aspectRatio: "4:3",
         aspectMode: "cover",
       },
     }));
 
     return {
       type: "carousel",
-      contents: [textBubble, ...imageBubbles], // ใส่ข้อความเป็นบับเบิลแรก ตามด้วยรูปภาพ
+      contents: [textBubble, ...imageBubbles],
     };
   } catch (error) {
     console.error("❌ Error creating Flex Message:", error);
@@ -2145,6 +2158,13 @@ const sendImageDatailMessage = async (
   agent
 ) => {
   try {
+    const userProfile = await getUserProfile(lineId);
+    // console.log("User Profile:", userProfile);
+
+    if (userProfile) {
+      await saveUser(userProfile, dbClient);
+    }
+
     console.log(`🔍 Searching for place: "${placeName}" in Database`);
 
     if (!dbClient || typeof dbClient.query !== "function") {
@@ -2189,8 +2209,8 @@ const sendImageDatailMessage = async (
     }
 
     console.log(`✅ Found place in Database: "${placeData.name}"`);
+    const uniqueImageDetails = [...new Set(placeData.image_details)];
 
-    // ปรับให้รองรับหลายภาพ
     const imageUrls =
       placeData.image_links && placeData.image_links.length > 0
         ? placeData.image_links
@@ -2198,10 +2218,9 @@ const sendImageDatailMessage = async (
             "https://cloud-atg.moph.go.th/quality/sites/default/files/default_images/default.png",
           ];
 
-    // ดึงที่มาของภาพ ถ้ามีหลายรายการ ให้รวมกัน
     const imageDetail =
-      placeData.image_details && placeData.image_details.length > 0
-        ? placeData.image_details.join(", ")
+      uniqueImageDetails && uniqueImageDetails.length > 0
+        ? uniqueImageDetails.join(", ")
         : "ไม่ระบุ";
 
     const answerText =
@@ -2209,12 +2228,17 @@ const sendImageDatailMessage = async (
         ? placeData.description
         : "ไม่มีรายละเอียดเพิ่มเติม";
 
+    const contactlink =
+      placeData.contact_link && placeData.contact_link.trim() !== ""
+        ? placeData.contact_link
+        : "ไม่มีช่องทางการติดต่อ";
+
     const flexMessage = createFlexDatabaseDetailMessage(
       placeData.name,
       imageUrls,
       answerText,
       imageDetail,
-      placeData.contact_link
+      contactlink
     );
 
     await saveConversation(
@@ -2263,7 +2287,7 @@ const fetchImageData = async (query, params, dbClient) => {
       "✅ Query result fetchImageData :",
       JSON.stringify(rows[0], null, 2)
     );
-    return rows[0]; // Return the first result
+    return rows[0];
   } catch (error) {
     console.error("❌ Error fetching image data:", error);
     return null;
@@ -2286,7 +2310,6 @@ const sendImageWebDetailMessage = async (
       return;
     }
 
-    // 🔍 ดึงข้อมูลรายละเอียดจาก Web Answer Table ก่อน
     const bestMatch = await getAnswerFromWebAnswerTable(
       "รายละเอียด",
       placeName,
@@ -2300,7 +2323,6 @@ const sendImageWebDetailMessage = async (
 
     console.log(`✅ Best Match Answer from Web Table: ${bestMatch.answer}`);
 
-    // 🔍 ดึงข้อมูลรูปภาพ
     const query = `
         SELECT id, image_link, image_detail, place_name, contact_link
         FROM web_answer
@@ -2324,7 +2346,6 @@ const sendImageWebDetailMessage = async (
       ? placeData.image_link.split(",").map((url) => url.trim())
       : [];
 
-    // ✅ ใช้ answer_text ที่ถูกต้องจาก getAnswerFromWebAnswerTable
     const answerText = bestMatch.answer.trim();
 
     const flexMessage = createFlexDetailMessage(
@@ -2417,9 +2438,15 @@ const eventByName = async (agent, dbClient) => {
   let responseMessage = "";
   let sourceType = "database";
   let eventId = null;
-  let eventName = agent.request_.body.queryResult.parameters.Event_name;
 
   try {
+    const userProfile = await getUserProfile(lineId);
+    // console.log("User Profile:", userProfile);
+
+    if (userProfile) {
+      await saveUser(userProfile, dbClient);
+    }
+
     console.log("📌 ข้อความที่ได้รับ:", questionText);
 
     if (!dbClient) {
@@ -2486,7 +2513,7 @@ const eventByName = async (agent, dbClient) => {
     if (dbClient) {
       await saveConversation(
         questionText,
-        responseMessage,
+        `Flex Message ${eventName}`,
         lineId,
         null,
         eventId,
@@ -2659,6 +2686,13 @@ const eventInMonth = async (agent, dbClient) => {
     console.log("📌 ข้อความที่ได้รับ:", questionText);
     console.log("📌 ค่าเดือนจากพารามิเตอร์:", month);
 
+    const userProfile = await getUserProfile(lineId);
+    // console.log("User Profile:", userProfile);
+
+    if (userProfile) {
+      await saveUser(userProfile, dbClient);
+    }
+
     if (!dbClient) {
       console.error("❌ Database client is not defined.");
       agent.add(
@@ -2712,7 +2746,7 @@ const eventInMonth = async (agent, dbClient) => {
     }
 
     console.log("📌 อีเวนต์ที่พบ:", events.length);
-    let eventText = `📅 อีเวนต์ในเดือน ${month}:\n\n`;
+    let eventText = `Flex Message เดือน ${month}`;
 
     events.forEach((event, index) => {
       eventText += `${index + 1}. ${event.event_name}\n`;
@@ -2722,11 +2756,12 @@ const eventInMonth = async (agent, dbClient) => {
       eventText += `🖼️ รูปภาพ: ${event.image}\n`;
       eventText += `📌 ที่มารูป: ${event.imageSource}\n\n`;
     });
+
     eventText = eventText.trim();
 
     await saveConversation(
       questionText,
-      eventText,
+      `Flex Message เดือน ${month}`,
       lineId,
       null,
       eventId,
@@ -2942,7 +2977,7 @@ const fetchFlexMessageWithPlace = async (intentName, dbClient) => {
         contact_link: row.contact_link?.startsWith("http")
           ? row.contact_link
           : null,
-        image_link: validImage, // ใช้เฉพาะรูปแรกที่ใช้งานได้
+        image_link: validImage,
         image_detail:
           row.image_details?.[row.image_links?.indexOf(validImage)] ||
           "รายละเอียดไม่ระบุ",
@@ -3113,7 +3148,14 @@ const sendFlexMessageToUser = async (userId, flexMessage) => {
 const sendFlexMessageTourist = async (agent, intentName, dbClient) => {
   const questionText =
     agent.request_.body.queryResult.queryText || "Unknown Question"; // ✅ ป้องกันค่าที่ไม่มี
+  const lineId = agent.originalRequest.payload.data.source?.userId;
 
+  const userProfile = await getUserProfile(lineId);
+  // console.log("User Profile:", userProfile);
+
+  if (userProfile) {
+    await saveUser(userProfile, dbClient);
+  }
   if (!intentName) {
     agent.add("ชื่อคำถามไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง");
     return;
@@ -3126,77 +3168,85 @@ const sendFlexMessageTourist = async (agent, intentName, dbClient) => {
     agent.add("⚠️ ไม่สามารถเชื่อมต่อฐานข้อมูล กรุณาลองใหม่อีกครั้ง.");
     return;
   }
-
-  const isanKeywords = [
-    "อาหารอีสาน",
-    "อีสาน",
-    "ไก่ย่าง",
-    "ลาบ",
-    "ก้อย",
-    "แกงอ่อม",
-    "ตำบักหุ่ง",
-    "ตำปูปลาร้า",
-    "แจ่ว",
-    "ต้มแซ่บ",
-    "หมก",
-    "ป่น",
-    "ข้าวจี่",
-    "ข้าวเหนียว",
-    "อ่อม",
-    "ซุปหน่อไม้",
-  ];
-  const thaiKeywords = ["อาหารไทย", "อาหารไทยแท้", "ไทย"];
-  const ItaliaKeywords = [
-    "อาหารจีน",
-    "อาหารอิตาเลี่ยน",
-    "อาหารอินเตอร์",
-    "อาหารต่างชาติ",
-    "จีน",
-    "อิตาเลี่ยน",
-    "อินเตอร์",
-    "ต่างชาติ",
-  ];
-  const OtherKeywords = [
-    "อาหารพวกเส้น",
-    "เส้น",
-    "อาหารริมทาง",
-    "อาหารสตรีทฟู้ด",
-    "สตรีทฟู้ด",
-    "อาหารจานเดียว",
-    "อาหารทั่วไป",
-  ];
-  const MichelinKeywords = ["Michelin", "มิชลินไกด์", "มิชลิน"];
-  const RecommentKeywords = [
-    "อาหารยอดฮิต",
-    "อาหารดัง",
-    "อาหารกระแส",
-    "ร้านอาหารดัง",
-    "อาหารสุดฮิต",
-  ];
-
-  const isanRegex = new RegExp(isanKeywords.join("|"), "i");
-  const thaiRegex = new RegExp(thaiKeywords.join("|"), "i");
-  const ItaliaRegex = new RegExp(ItaliaKeywords.join("|"), "i");
-  const OtherRegex = new RegExp(OtherKeywords.join("|"), "i");
-  const MichelinRegex = new RegExp(MichelinKeywords.join("|"), "i");
-  const RecommentRegex = new RegExp(RecommentKeywords.join("|"), "i");
-
-  if (isanRegex.test(questionText)) {
-    intentName = "ประเภทอาหารอีสาน";
-  } else if (thaiRegex.test(questionText)) {
-    intentName = "ประเภทอาหารไทย";
-  } else if (OtherRegex.test(questionText)) {
-    intentName = "ประเภทอาหารทั่วไป";
-  } else if (ItaliaRegex.test(questionText)) {
-    intentName = "ประเภทอาหารอินเตอร์";
-  } else if (MichelinRegex.test(questionText)) {
-    intentName = "อาหารระดับมิชลินไกด์";
-  } else if (RecommentRegex.test(questionText)) {
-    intentName = "ร้านอาหารดังยอดฮิต";
+  const receivedParams = agent.request_.body.queryResult.parameters || {};
+  const districtType = receivedParams?.district_type || null;
+  const type = receivedParams?.type || null; // เพิ่มตัวแปร type
+  console.log("📍 Received Parameters:", receivedParams);
+  
+  let updatedIntentName = intentName; // ค่าเริ่มต้นเป็น intentName ปกติ
+  
+  if (questionText === intentName) {
+      updatedIntentName = intentName; // ใช้ intentName ถ้ามันตรงกับ questionText
+      console.log(`✅ ใช้ intentName โดยตรง: ${updatedIntentName}`);
+  } else if (districtType) {
+      updatedIntentName = districtType; // ใช้ districtType ถ้ามี
+      console.log(`✅ ใช้ districtType แทน: ${updatedIntentName}`);
+  } else if (type) {
+      updatedIntentName = type; // ใช้ type ถ้ามี
+      console.log(`✅ ใช้ type แทน: ${updatedIntentName}`);
+  } else {
+      console.log(`⚠️ Intent ไม่ตรงกับ districtType หรือ type! ใช้ intentName เดิม (${intentName})`);
   }
-
+  
+  // 🛠 ตรวจสอบหมวดหมู่อาหาร (ทำเฉพาะเมื่อไม่มี districtType หรือ type)
+  if (!districtType && !type) {
+      const isanKeywords = [
+        "อาหารอีสาน", "อีสาน", "ไก่ย่าง", "ลาบ", "ก้อย", "แกงอ่อม",
+        "ตำบักหุ่ง", "ตำปูปลาร้า", "แจ่ว", "ต้มแซ่บ", "หมก", "ป่น",
+        "ข้าวจี่", "ข้าวเหนียว", "อ่อม", "ซุปหน่อไม้"
+      ];
+      const thaiKeywords = ["อาหารไทย", "อาหารไทยแท้", "ไทย"];
+      const ItaliaKeywords = [
+        "อาหารจีน", "อาหารอิตาเลี่ยน", "อาหารอินเตอร์", "อาหารต่างชาติ",
+        "จีน", "อิตาเลี่ยน", "อินเตอร์", "ต่างชาติ"
+      ];
+      const OtherKeywords = [
+        "อาหารพวกเส้น", "เส้น", "อาหารริมทาง", "อาหารสตรีทฟู้ด",
+        "สตรีทฟู้ด", "อาหารจานเดียว", "อาหารทั่วไป"
+      ];
+      const MichelinKeywords = ["Michelin", "มิชลินไกด์", "มิชลิน"];
+      const RecommentKeywords = [
+        "อาหารยอดฮิต", "อาหารดัง", "อาหารกระแส", "ร้านอาหารดัง", "อาหารสุดฮิต"
+      ];
+  
+      const isanRegex = new RegExp(isanKeywords.join("|"), "i");
+      const thaiRegex = new RegExp(thaiKeywords.join("|"), "i");
+      const ItaliaRegex = new RegExp(ItaliaKeywords.join("|"), "i");
+      const OtherRegex = new RegExp(OtherKeywords.join("|"), "i");
+      const MichelinRegex = new RegExp(MichelinKeywords.join("|"), "i");
+      const RecommentRegex = new RegExp(RecommentKeywords.join("|"), "i");
+  
+      if (isanRegex.test(questionText)) {
+          updatedIntentName = "ประเภทอาหารอีสาน";
+      } else if (thaiRegex.test(questionText)) {
+          updatedIntentName = "ประเภทอาหารไทย";
+      } else if (OtherRegex.test(questionText)) {
+          updatedIntentName = "ประเภทอาหารทั่วไป";
+      } else if (ItaliaRegex.test(questionText)) {
+          updatedIntentName = "ประเภทอาหารอินเตอร์";
+      } else if (MichelinRegex.test(questionText)) {
+          updatedIntentName = "อาหารระดับมิชลินไกด์";
+      } else if (RecommentRegex.test(questionText)) {
+          updatedIntentName = "ร้านอาหารดังยอดฮิต";
+      }
+  }
+  
+  // 🛠 ถ้า intentName ที่อัปเดตมาไม่ตรงกับ intentName เดิม และมี districtType -> ใช้ districtType แทน
+  if (updatedIntentName !== intentName && districtType) {
+      console.log(`⚠️ Intent ไม่ตรงกัน! ใช้ค่าอำเภอแทน: ${districtType}`);
+      updatedIntentName = districtType;
+  }
+  
+  console.log("🔎 ตรวจสอบ intent:", {
+      questionText,
+      intentName,
+      updatedIntentName,
+      districtType,
+      type,
+  });
+  
   try {
-    const data = await fetchFlexMessageWithPlace(intentName, dbClient);
+    const data = await fetchFlexMessageWithPlace(updatedIntentName, dbClient);
     console.log("🚀 Fetched Data:", data);
 
     if (!data || data.length === 0) {
@@ -3263,7 +3313,7 @@ const sendFlexMessageTourist = async (agent, intentName, dbClient) => {
     agent.add("");
   } catch (error) {
     console.error("❌ Error sending Flex Message:", error.message);
-    agent.add("ขออภัย เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่อีกครั้ง");
+    agent.add("ขออภัย ยังไม่พบข้อมูล กรุณาลองใหม่อีกครั้ง");
   }
 };
 
@@ -3948,6 +3998,13 @@ const handleWebhookRequest = async (req, res, dbClient) => {
     intentMap.set("ประเภทอาหารทั่วไป", (agent) =>
       sendFlexMessageTourist(agent, "ประเภทอาหารทั่วไป", dbClient)
     );
+    intentMap.set("แหล่งท่องเที่ยวสำหรับครอบครัวและเด็ก", (agent) =>
+      sendFlexMessageTourist(
+        agent,
+        "แหล่งท่องเที่ยวสำหรับครอบครัวและเด็ก",
+        dbClient
+      )
+    );
     intentMap.set("ประเภทอาหารอินเตอร์", (agent) =>
       sendFlexMessageTourist(agent, "ประเภทอาหารอินเตอร์", dbClient)
     );
@@ -3957,14 +4014,71 @@ const handleWebhookRequest = async (req, res, dbClient) => {
     intentMap.set("ประเภทอาหารไทย", (agent) =>
       sendFlexMessageTourist(agent, "ประเภทอาหารไทย", dbClient)
     );
+    intentMap.set("อำเภอเมืองขอนแก่น", (agent) =>
+      sendFlexMessageTourist(agent, "อำเภอเมืองขอนแก่น", dbClient)
+    );
+    intentMap.set("อำเภอน้ำพอง", (agent) =>
+      sendFlexMessageTourist(agent, "อำเภอน้ำพอง ", dbClient)
+    );
+ 
+    intentMap.set("อำเภออุบลรัตน์", (agent) =>
+      sendFlexMessageTourist(agent, "อำเภออุบลรัตน์", dbClient)
+    );
+    intentMap.set("อำเภอภูเวียง", (agent) =>
+      sendFlexMessageTourist(agent, "อำเภอภูเวียง", dbClient)
+    );
+    intentMap.set("อำเภอหนองเรือ", (agent) =>
+      sendFlexMessageTourist(agent, "อำเภอหนองเรือ", dbClient)
+    );
+    intentMap.set("อำเภอชุมแพ", (agent) =>
+      sendFlexMessageTourist(agent, "อำเภอชุมแพ", dbClient)
+    );
+    intentMap.set("อำเภอเวียงเก่า", (agent) =>
+      sendFlexMessageTourist(agent, "อำเภอเวียงเก่า", dbClient)
+    );
+    intentMap.set("อำเภอบ้านฝาง", (agent) =>
+      sendFlexMessageTourist(agent, "อำเภอบ้านฝาง", dbClient)
+    );
+    intentMap.set("อำเภอเขาสวนกวาง", (agent) =>
+      sendFlexMessageTourist(agent, "อำเภอเขาสวนกวาง", dbClient)
+    );
+    intentMap.set("อำเภอเปือยน้อย", (agent) =>
+      sendFlexMessageTourist(agent, "อำเภอเปือยน้อย", dbClient)
+    );
+    intentMap.set("อำเภอกระนวน", (agent) =>
+      sendFlexMessageTourist(agent, "อำเภอกระนวน", dbClient)
+    );
+    intentMap.set("อำเภอภูผาม่าน", (agent) =>
+      sendFlexMessageTourist(agent, "อำเภอภูผาม่าน", dbClient)
+    );
     intentMap.set("เส้นทางไปยังสถานที่", async (agent) => {
       await sendLocationBasedOnQuestion(agent, dbClient, location);
     });
-
     intentMap.set("ร้านอาหารดังยอดฮิต", (agent) =>
-      sendFlexMessageTourist(agent, "ประเภทอาหารไทย", dbClient)
+      sendFlexMessageTourist(agent, "ร้านอาหารดังยอดฮิต", dbClient)
     );
-
+    intentMap.set("แหล่งท่องเที่ยวทางธรรมชาติ", (agent) =>
+      sendFlexMessageTourist(agent, "แหล่งท่องเที่ยวทางธรรมชาติ", dbClient)
+    );
+    intentMap.set("แหล่งท่องเที่ยวประเภทน้ำตก", (agent) =>
+      sendFlexMessageTourist(agent, "แหล่งท่องเที่ยวประเภทน้ำตก", dbClient)
+    );
+    intentMap.set("แหล่งท่องเที่ยวเพื่อนันทนาการ", (agent) =>
+      sendFlexMessageTourist(agent, "แหล่งท่องเที่ยวเพื่อนันทนาการ", dbClient)
+    );
+    intentMap.set("แหล่งท่องเที่ยวทางวัฒนธรรมและประวัติศาสตร์", (agent) =>
+      sendFlexMessageTourist(
+        agent,
+        "แหล่งท่องเที่ยวทางวัฒนธรรมและประวัติศาสตร์",
+        dbClient
+      )
+    );
+    intentMap.set("แหล่งท่องเที่ยวทางศาสนา", (agent) =>
+      sendFlexMessageTourist(agent, "แหล่งท่องเที่ยวทางศาสนา", dbClient)
+    );
+    intentMap.set("แหล่งท่องเที่ยวสำหรับช็อปปิ้ง", (agent) =>
+      sendFlexMessageTourist(agent, "แหล่งท่องเที่ยวสำหรับช็อปปิ้ง", dbClient)
+    );
     intentMap.set("เลือกอำเภอ", async (agent) => {
       try {
         await sendFlexMessage(agent, "district", dbClient);
@@ -4480,27 +4594,16 @@ async function sendFlexMessage(agent, messageType, dbClient) {
   const questionText = agent.query;
   let flexMessage;
   let flexMessageType;
+  let sourceType = "Flex Message";
 
   switch (messageType) {
-    case "restaurant":
-      flexMessage = createrestaurantFlexMessage();
-      flexMessageType = "ประเภทร้านอาหาร";
-      break;
     case "district":
       flexMessage = createDistrictFlexMessage();
       flexMessageType = "อำเภอ";
       break;
-    case "districtType":
-      flexMessage = createDistrictTypeFlexMessage();
-      flexMessageType = "ประเภทอำเภอ";
-      break;
     case "kkctype":
       flexMessage = createkkutypeFlexMessage();
       flexMessageType = "เลือกประเภทสถานที่";
-      break;
-    case "typeplaces":
-      flexMessage = createTypeplacesFlexMessage();
-      flexMessageType = "ประเภทสถานที่ในขอนแก่น";
       break;
 
     default:
@@ -4519,7 +4622,7 @@ async function sendFlexMessage(agent, messageType, dbClient) {
         userId,
         null,
         null,
-        flexMessageType,
+        sourceType,
         null,
         dbClient
       );

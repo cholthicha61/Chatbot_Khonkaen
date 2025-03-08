@@ -2,8 +2,8 @@
   <LayoutAuthenticated>
     <SectionMain>
       <SectionTitleLineWithButton :icon="mdiTableBorder" title="Flex Message" main />
-       <!-- 🔍 ช่องค้นหา -->
-       <div class="mb-4 flex justify-end">
+      <!-- 🔍 ช่องค้นหา -->
+      <div class="mb-4 flex justify-end">
         <input
           v-model="searchQuery"
           type="text"
@@ -11,7 +11,6 @@
           class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
         />
       </div>
-
 
       <CardBox class="mb-6" has-table>
         <!-- Container for the button -->
@@ -125,6 +124,14 @@
                   {{ placeOption.name }}
                 </option>
               </select>
+              <BaseButton
+                v-if="currentFlextourist.places.length > 1"
+                color="danger"
+                small
+                :icon="mdiTrashCanOutline"
+                @click="removePlaceField(index)"
+                class="my-2"
+              />
             </div>
 
             <!-- Button to Add More Places -->
@@ -217,7 +224,7 @@
 </template>
 
 <script setup>
-import { mdiTableBorder, mdiPencil, mdiTrashCan, mdiPlus } from '@mdi/js'
+import { mdiTableBorder, mdiTrashCanOutline, mdiPencil, mdiTrashCan, mdiPlus } from '@mdi/js'
 import SectionMain from '@/components/SectionMain.vue'
 import CardBox from '@/components/CardBox.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
@@ -249,7 +256,6 @@ const filteredPlaces = computed(() => {
   )
 })
 
-
 function addPlaceField() {
   currentFlextourist.value.places.push({ place_id: '' })
 }
@@ -258,9 +264,7 @@ onMounted(async () => {
   try {
     await store.fetchFlexTourist()
     await placesStore.fetchPlaces()
-    places.value = placesStore.places.sort((a, b) =>
-      a.name.localeCompare(b.name, 'th')
-    )    // console.log('📌 Loaded places:', JSON.stringify(places.value, null, 2))
+    places.value = placesStore.places.sort((a, b) => a.name.localeCompare(b.name, 'th')) // console.log('📌 Loaded places:', JSON.stringify(places.value, null, 2))
   } catch (error) {
     console.error('❌ Error during onMounted:', error)
   }
@@ -358,6 +362,9 @@ async function saveAdd() {
       text: error.response?.data || 'An error occurred while adding the flextourist.'
     })
   }
+}
+function removePlaceField(index) {
+  currentFlextourist.value.places.splice(index, 1)
 }
 
 async function saveEdit() {
@@ -476,7 +483,7 @@ const filteredFlexTourists = computed(() => {
   let filtered = store.flextourist.filter((tourist) => {
     const query = searchQuery.value.toLowerCase()
     return (
-      tourist.tourist_name.toLowerCase().includes(query) || 
+      tourist.tourist_name.toLowerCase().includes(query) ||
       (tourist.places && tourist.places.some((place) => place.name.toLowerCase().includes(query))) // ค้นหาสถานที่
     )
   })
@@ -489,9 +496,6 @@ const filteredFlexTourists = computed(() => {
 
   return filtered
 })
-
-
-
 
 function formatDate(date) {
   return date ? new Date(date).toLocaleDateString() : 'No date available'

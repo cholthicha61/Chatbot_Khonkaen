@@ -109,59 +109,35 @@ const saveWebAnswer = async (
   contactLink
 ) => {
   try {
-    const extractDetailsFromFlexMessage = (flexMessage) => {
+    let finalAnswerText = "";
+
+    if (typeof answerText === "object" && answerText.type === "carousel") {
       try {
-        const flexObject =
-          typeof flexMessage === "string"
-            ? JSON.parse(flexMessage)
-            : flexMessage;
-
-        if (
-          flexObject &&
-          flexObject.contents &&
-          flexObject.contents.body &&
-          Array.isArray(flexObject.contents.body.contents)
-        ) {
-          const contents = flexObject.contents.body.contents;
-
-          let placeDescription = contents
-            .filter((item) => item.type === "text" && item.wrap)
-            .map((item) => item.text)
-            .join("\n")
-            .replace(/^\d+\.\s*/, "")
-            .replace(/\s{2,}/g, " ")
-            .replace(/ขอบคุณรูปภาพจาก.*/gi, "")
-            .replace(/ภาพจาก.*/gi, "")
-            .replace(imageDescription, "")
-            .trim();
-
-          const cleanPlaceName = placeName.replace(
-            /[.*+?^${}()|[\]\\]/g,
-            "\\$&"
-          ); // Escape special chars
-          placeDescription = placeDescription
-            .replace(new RegExp(`^${cleanPlaceName}\\s*`, "gi"), "")
-            .trim();
-
-          return placeDescription || "ไม่มีข้อมูลรายละเอียดสถานที่";
-        } else {
-          return "ไม่สามารถดึงข้อมูลจาก Flex Message ได้";
+        const flexContents = answerText.contents;
+        if (Array.isArray(flexContents) && flexContents.length > 0) {
+          const firstBubble = flexContents[0];
+          if (firstBubble.body && Array.isArray(firstBubble.body.contents)) {
+            const textElement = firstBubble.body.contents.find(
+              (item) => item.type === "text"
+            );
+            if (textElement) {
+              finalAnswerText = textElement.text;
+            }
+          }
         }
       } catch (error) {
-        console.error("Error extracting details from Flex Message:", error);
-        return "เกิดข้อผิดพลาดในการแปลงข้อมูล";
+        console.error("❌ Error extracting text from Flex Message:", error);
       }
-    };
+    } else if (typeof answerText === "string") {
+      finalAnswerText = answerText;
+    }
 
-    const finalAnswerText =
-      typeof answerText === "object" && answerText.type === "flex"
-        ? extractDetailsFromFlexMessage(answerText)
-        : answerText;
+    if (!finalAnswerText || finalAnswerText.trim() === "") {
+      finalAnswerText = "ไม่มีข้อมูลรายละเอียดสถานที่";
+    }
 
-    if (!isFromWeb || !finalAnswerText || finalAnswerText.trim() === "") {
-      console.log(
-        "This answer was not from a website or is empty, not saving."
-      );
+    if (!isFromWeb) {
+      console.log("❌ Not from web, skipping save.");
       return;
     }
 
@@ -176,15 +152,12 @@ const saveWebAnswer = async (
     ]);
 
     if (checkResult.rows.length > 0) {
-      console.log("Answer already exists in the database, skipping save.");
+      console.log("✅ Answer already exists in the database, skipping save.");
       return;
     }
 
-    const isValidImageUrl = (url) => {
-      return (
-        typeof url === "string" && url.startsWith("http") && url.includes(".")
-      );
-    };
+    const isValidImageUrl = (url) =>
+      typeof url === "string" && url.startsWith("http") && url.includes(".");
 
     const finalImageUrl = isValidImageUrl(imageUrl) ? imageUrl : "ไม่มีรูปภาพ";
 
@@ -756,7 +729,7 @@ const fetchHTMLAndSaveToJSON6 = async (url, outputFilePath) => {
     const cheerio = require("cheerio");
     const fs = require("fs");
 
-    // console.log(`Fetching HTML from: ${url}`);
+    // console.log(Fetching HTML from: ${url});
     const { data: html } = await axios.get(url);
     const cleanLocationName = (name) => {
       return name
@@ -808,7 +781,7 @@ const fetchHTMLAndSaveToJSON6 = async (url, outputFilePath) => {
     }
 
     fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2), "utf8");
-    // console.log(`Data saved to ${outputFilePath}`);
+    // console.log(Data saved to ${outputFilePath});
   } catch (error) {
     console.error("Error fetching and saving data:", error);
   }
@@ -1469,113 +1442,90 @@ const createFlexMessage = (
   imageDetails,
   contactLink
 ) => {
-  console.log(`Creating Flex Message with Image URL: ${placeImageUrl}`);
+  try {
+    const defaultImageUrl =
+      "https://cloud-atg.moph.go.th/quality/sites/default/files/default_images/default.png";
 
-  const defaultImageUrl =
-    "https://cloud-atg.moph.go.th/quality/sites/default/files/default_images/default.png";
+    if (
+      !placeImageUrl ||
+      typeof placeImageUrl !== "string" ||
+      placeImageUrl.trim() === "" ||
+      placeImageUrl === "ไม่มีรูปภาพ" ||
+      !placeImageUrl.startsWith("http")
+    ) {
+      placeImageUrl = defaultImageUrl;
+      imageDetails = "";
+    }
 
-  if (typeof placeImageUrl === "string" && placeImageUrl.includes(" ")) {
-    placeImageUrl = encodeURIComponent(placeImageUrl);
-  }
-
-  if (
-    !placeImageUrl ||
-    typeof placeImageUrl !== "string" ||
-    placeImageUrl.trim() === "" ||
-    placeImageUrl === "ไม่มีรูปภาพ" ||
-    !placeImageUrl.startsWith("http")
-  ) {
-    placeImageUrl = defaultImageUrl;
-    imageDetails = "";
-  }
-
-  const safeImageSource =
-    !imageDetails?.trim() || placeImageUrl === defaultImageUrl
-      ? "ไม่มีรายละเอียดรูปภาพ"
-      : imageDetails;
-
-  const footerContent = [];
-
-  if (contactLink && contactLink.startsWith("http")) {
-    footerContent.push({
-      type: "button",
-      style: "link",
-      height: "sm",
-      action: {
-        type: "uri",
-        label: "ช่องทางการติดต่อ",
-        uri: contactLink,
-      },
-    });
-  } else if (contactLink) {
-    // ถ้าไม่มีลิงก์แต่มีข้อความ เช่น "Facebook: Kyoto Shi Cafe ขอนแก่น"
-    footerContent.push({
-      type: "text",
-      text: `ช่องทางการติดต่อ: ${contactLink.replace("Facebook: ", "").trim()}`,
-      size: "sm",
-      color: "#555555",
-      align: "center",
-      wrap: true,
-    });
-  } else {
-    // ถ้าไม่มีข้อมูลเลย
-    footerContent.push({
-      type: "text",
-      text: "ไม่พบช่องทางการติดต่อ",
-      size: "sm",
-      color: "#aaaaaa",
-      align: "center",
-      wrap: true,
-    });
-  }
-
-  return {
-    type: "flex",
-    altText: "รายละเอียดสถานที่",
-    contents: {
+    const textBubble = {
       type: "bubble",
-      hero: {
-        type: "image",
-        url: placeImageUrl,
-        size: "full",
-        aspectRatio: "20:13",
-        aspectMode: "cover",
-      },
       body: {
         type: "box",
         layout: "vertical",
         contents: [
           {
             type: "text",
-            text: placeName || "ชื่อสถานที่ไม่ระบุ",
-            weight: "bold",
-            size: "xl",
-            wrap: true,
-          },
-          {
-            type: "text",
             text: placeDescription || "ไม่มีรายละเอียดเพิ่มเติม",
             wrap: true,
-            margin: "md",
+            size: "md",
           },
           {
             type: "text",
-            text: safeImageSource,
+            text: `ที่มา: ${imageDetails || "ไม่ระบุ"}`,
             wrap: true,
-            margin: "md",
             size: "sm",
             color: "#aaaaaa",
+            margin: "md",
           },
+          contactLink && contactLink.startsWith("http")
+            ? {
+                type: "box",
+                layout: "horizontal",
+                margin: "md",
+                contents: [
+                  {
+                    type: "button",
+                    style: "primary",
+                    color: "#9966FF",
+                    action: {
+                      type: "uri",
+                      label: "ติดต่อเรา",
+                      uri: contactLink,
+                    },
+                  },
+                ],
+              }
+            : {
+                type: "text",
+                text: "ไม่พบช่องทางการติดต่อ",
+                size: "sm",
+                color: "#aaaaaa",
+                align: "center",
+                wrap: true,
+              },
         ],
       },
-      footer: {
-        type: "box",
-        layout: "vertical",
-        spacing: "sm",
-        contents: footerContent,
+    };
+
+    const imageBubble = {
+      type: "bubble",
+      hero: {
+        type: "image",
+        url: placeImageUrl,
+        size: "full",
+        aspectRatio: "16:9",
+        aspectMode: "fit",
       },
-    },
-  };
+    };
+
+    return {
+      type: "carousel",
+      contents: [textBubble, imageBubble],
+    };
+  } catch (error) {
+    console.error("❌ Error creating Flex Message:", error);
+    return null;
+  }
 };
 
 const filterByKeyword = (data, allKeywords, questionText, displayName) => {
@@ -1628,6 +1578,8 @@ const filterByKeyword = (data, allKeywords, questionText, displayName) => {
 
   let filteredResponse = [];
   let contactLink = "";
+  let placeImageUrl = "";
+  let imageDetails = "";
 
   if (displayName === "เวลาเปิดทำการ") {
     console.log("Filtering by time...");
@@ -1753,6 +1705,8 @@ const filterByKeyword = (data, allKeywords, questionText, displayName) => {
         contactLink
       ),
       contactLink,
+      placeImageUrl,
+      imageDetails,
     };
   }
 
@@ -1761,6 +1715,8 @@ const filterByKeyword = (data, allKeywords, questionText, displayName) => {
     return {
       response: "ไม่พบข้อมูลที่ตรงกับคำถาม",
       contactLink: "",
+      placeImageUrl: "",
+      imageDetails: "",
     };
   }
 
@@ -1770,94 +1726,143 @@ const filterByKeyword = (data, allKeywords, questionText, displayName) => {
   return {
     response: responseText || "ไม่พบข้อมูลที่ตรงกับคำถาม",
     contactLink,
+    placeImageUrl,
+    imageDetails,
   };
 };
 
-const getAnswerForIntent = async (intentName, placeName, dbClient) => {
-  if (!placeName) {
-    console.log("No placeName provided");
+const getAnswerForIntent = async (
+  intentName,
+  placeName,
+  dbClient,
+  similarityThreshold = 0.4,
+  wordSimThreshold = 0.3,
+  editDistanceMax = 10
+) => {
+  if (!dbClient) {
+    throw new Error("❌ Database client is not initialized.");
+  }
+
+  if (!placeName || placeName.trim() === "") {
+    console.log("⚠️ No placeName provided");
     return { answer: null, placeId: null };
   }
 
   const queries = {
-    ค่าธรรมเนียมการเข้า:
-      "SELECT admission_fee AS answer, id AS place_id, name FROM places WHERE name % $1 ORDER BY similarity(name, $1) DESC LIMIT 1",
-    เวลาเปิดทำการ:
-      "SELECT opening_hours AS answer, id AS place_id, name FROM places WHERE name % $1 ORDER BY similarity(name, $1) DESC LIMIT 1",
-    เส้นทางไปยังสถานที่:
-      "SELECT address AS answer, id AS place_id, name FROM places WHERE name % $1 ORDER BY similarity(name, $1) DESC LIMIT 1",
-    รายละเอียด:
-      "SELECT description AS answer, contact_link, id AS place_id, name FROM places WHERE name % $1 ORDER BY similarity(name, $1) DESC LIMIT 1",
-    ช่องทางการติดต่อ:
-      "SELECT contact_link AS answer, id AS place_id, name FROM places WHERE name % $1 ORDER BY similarity(name, $1) DESC LIMIT 1",
+    ค่าธรรมเนียมการเข้า: "admission_fee AS answer",
+    เวลาเปิดทำการ: "opening_hours AS answer",
+    เส้นทางไปยังสถานที่: "address AS answer",
+    รายละเอียด: "description AS answer, contact_link",
+    ช่องทางการติดต่อ: "contact_link AS answer",
   };
 
+  const columnSelection = queries[intentName] || null;
+  if (!columnSelection) {
+    console.log(`❌ No query found for intent: ${intentName}`);
+    return { answer: null, placeId: null };
+  }
+
   try {
-    const query = queries[intentName] || null;
-    if (!query) {
-      console.log(`No query found for intent: ${intentName}`);
+    const query = `
+      SELECT 
+        ${columnSelection},
+        id AS place_id, 
+        name AS place_name,
+        similarity(replace(name, ' ', ''), replace($1, ' ', '')) * 1.5 AS boosted_similarity, 
+        word_similarity(replace(name, ' ', ''), replace($1, ' ', '')) AS word_sim,  
+        levenshtein(replace(lower(name), ' ', ''), replace(lower($1), ' ', '')) AS edit_distance
+      FROM places
+      WHERE (
+        replace(lower(name), ' ', '') % replace(lower($1), ' ', '') 
+        OR replace(lower(name), ' ', '') ILIKE '%' || replace(lower($1), ' ', '') || '%'
+      )
+      ORDER BY boosted_similarity DESC, word_sim DESC, edit_distance ASC
+      LIMIT 5;
+    `;
+
+    console.log(`🔍 Running query for place: "${placeName}"`);
+    const result = await dbClient.query(query, [placeName]);
+
+    if (result.rows.length === 0) {
+      console.log("❌ No matching data found in places table.");
       return { answer: null, placeId: null };
     }
 
-    console.log(`Running query: ${query}`);
+    // ✅ กรองข้อมูลตาม similarity score ก่อน
+    const filteredResults = result.rows.filter(
+      (row) =>
+        row.boosted_similarity >= similarityThreshold &&
+        row.word_sim >= wordSimThreshold &&
+        row.edit_distance <= editDistanceMax
+    );
 
-    // ใช้ pg_trgm เพื่อหา placeName ที่คล้ายที่สุด
-    const result = await dbClient.query(query, [placeName]);
-    console.log(`Database query result:`, result.rows);
-
-    if (result.rows.length > 0) {
-      let answerText = result.rows[0].answer;
-      const placeId = result.rows[0].place_id;
-      const matchedPlaceName = result.rows[0].name;
-      const contactLink =
-        result.rows[0].contact_link || "ไม่พบข้อมูลช่องทางการติดต่อสถานที่";
-
-      const filteredAnswer = {
-        address: null,
-        fee: null,
-        contact: null,
-        openingHours: null,
-        contact_link: null,
-        other: null,
-      };
-
-      if (intentName === "ค่าธรรมเนียมการเข้า") {
-        filteredAnswer.fee = answerText
-          ? answerText.trim()
-          : "ไม่พบข้อมูลค่าธรรมเนียมการเข้า";
-      } else if (intentName === "เส้นทางไปยังสถานที่") {
-        filteredAnswer.address = answerText
-          ? answerText.trim()
-          : "ไม่พบข้อมูลเส้นทางไปยังสถานที่";
-      } else if (intentName === "เวลาเปิดทำการ") {
-        filteredAnswer.openingHours = answerText
-          ? answerText.trim()
-          : "ไม่พบข้อมูลเวลาเปิดทำการ";
-      } else if (intentName === "ช่องทางการติดต่อ") {
-        filteredAnswer.contact_link = answerText
-          ? answerText.trim()
-          : "ไม่พบข้อมูลช่องทางการติดต่อสถานที่";
-      } else if (intentName === "รายละเอียด") {
-        filteredAnswer.detail = answerText
-          ? answerText.trim()
-          : "ไม่พบข้อมูลรายละเอียด";
-        filteredAnswer.contact_link = contactLink;
-      }
-
-      console.log("Filtered answer:", filteredAnswer);
-
-      return {
-        answer: filteredAnswer,
-        placeId,
-        matchedPlaceName, // ส่งชื่อสถานที่ที่ถูกต้องกลับไป
-      };
+    if (filteredResults.length === 0) {
+      console.log("❌ No results meet the similarity threshold.");
+      return { answer: null, placeId: null };
     }
 
-    console.log("No data found for the place");
-    return { answer: null, placeId: null };
+    // ✅ เลือกค่าที่ดีที่สุด
+    let bestMatch = filteredResults.reduce((prev, current) => {
+      if (current.boosted_similarity > prev.boosted_similarity) return current;
+      if (current.boosted_similarity === prev.boosted_similarity) {
+        if (current.word_sim > prev.word_sim) return current;
+        if (
+          current.word_sim === prev.word_sim &&
+          current.edit_distance < prev.edit_distance
+        )
+          return current;
+      }
+      return prev;
+    });
+
+    console.log(
+      `✅ Best Match Selected: "${bestMatch.place_name}" with Similarity: ${bestMatch.boosted_similarity}, Word Sim: ${bestMatch.word_sim}, Edit Distance: ${bestMatch.edit_distance}`
+    );
+
+    // ✅ จัดรูปแบบคำตอบให้ตรงกับ intent
+    const filteredAnswer = {
+      address: null,
+      fee: null,
+      contact: null,
+      openingHours: null,
+      contact_link: null,
+      detail: null,
+    };
+
+    if (intentName === "ค่าธรรมเนียมการเข้า") {
+      filteredAnswer.fee = bestMatch.answer
+        ? bestMatch.answer.trim()
+        : "ไม่พบข้อมูลค่าธรรมเนียมการเข้า";
+    } else if (intentName === "เส้นทางไปยังสถานที่") {
+      filteredAnswer.address = bestMatch.answer
+        ? bestMatch.answer.trim()
+        : "ไม่พบข้อมูลเส้นทางไปยังสถานที่";
+    } else if (intentName === "เวลาเปิดทำการ") {
+      filteredAnswer.openingHours = bestMatch.answer
+        ? bestMatch.answer.trim()
+        : "ไม่พบข้อมูลเวลาเปิดทำการ";
+    } else if (intentName === "ช่องทางการติดต่อ") {
+      filteredAnswer.contact_link = bestMatch.answer
+        ? bestMatch.answer.trim()
+        : "ไม่พบข้อมูลช่องทางการติดต่อสถานที่";
+    } else if (intentName === "รายละเอียด") {
+      filteredAnswer.detail = bestMatch.answer
+        ? bestMatch.answer.trim()
+        : "ไม่พบข้อมูลรายละเอียด";
+      filteredAnswer.contact_link =
+        bestMatch.contact_link || "ไม่พบข้อมูลช่องทางการติดต่อ";
+    }
+
+    console.log("✅ Filtered Answer:", filteredAnswer);
+
+    return {
+      answer: filteredAnswer,
+      placeId: bestMatch.place_id,
+      matchedPlaceName: bestMatch.place_name,
+    };
   } catch (error) {
-    console.error("Error fetching data from places table:", error.stack);
-    throw new Error("Database query error");
+    console.error("🚨 Error fetching data from places table:", error.stack);
+    return { answer: null, placeId: null };
   }
 };
 
@@ -1977,40 +1982,49 @@ const createFlexDetailMessage = (
     const defaultImageUrl =
       "https://cloud-atg.moph.go.th/quality/sites/default/files/default_images/default.png";
 
-    if (
-      !Array.isArray(imageUrls) ||
-      imageUrls.length === 0 ||
-      imageUrls.includes("ไม่มีรูปภาพ") ||
-      imageUrls.includes(defaultImageUrl)
-    ) {
+    if (!Array.isArray(imageUrls) || imageUrls.length === 0) {
       imageUrls = [defaultImageUrl];
-      imageSource = "";
     }
 
-    const bubbles = imageUrls.map((imageUrl) => {
-      const isValidUrl = imageUrl && imageUrl.startsWith("http");
-      const safeImageUrl = isValidUrl ? imageUrl : defaultImageUrl;
-      const safeImageSource =
-        !imageSource?.trim() || safeImageUrl === defaultImageUrl
-          ? "ไม่มีรายละเอียดรูปภาพ"
-          : imageSource;
-
-      const footerContent =
-        contact_link && contact_link.startsWith("http")
-          ? [
-              {
-                type: "button",
-                style: "link",
-                height: "sm",
-                action: {
-                  type: "uri",
-                  label: "ช่องทางการติดต่อ",
-                  uri: contact_link,
-                },
-              },
-            ]
-          : [
-              {
+    const textBubble = {
+      type: "bubble",
+      body: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "text",
+            text: answerText || "ไม่มีรายละเอียดเพิ่มเติม",
+            wrap: true,
+            size: "md",
+          },
+          {
+            type: "text",
+            text: `ที่มา: ${imageSource || "ไม่ระบุ"}`,
+            wrap: true,
+            size: "sm",
+            color: "#aaaaaa",
+            margin: "md",
+          },
+          contact_link && contact_link.startsWith("http")
+            ? {
+                type: "box",
+                layout: "horizontal",
+                margin: "md",
+                contents: [
+                  {
+                    type: "button",
+                    style: "primary",
+                    color: "#9966FF",
+                    action: {
+                      type: "uri",
+                      label: "ติดต่อเรา",
+                      uri: contact_link,
+                    },
+                  },
+                ],
+              }
+            : {
                 type: "text",
                 text: "ไม่พบช่องทางการติดต่อ",
                 size: "sm",
@@ -2018,55 +2032,25 @@ const createFlexDetailMessage = (
                 align: "center",
                 wrap: true,
               },
-            ];
+        ],
+      },
+    };
 
-      return {
-        type: "bubble",
-        hero: {
-          type: "image",
-          url: safeImageUrl,
-          size: "full",
-          aspectRatio: "20:13",
-          aspectMode: "cover",
-        },
-        body: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "text",
-              text: placeName || "ชื่อสถานที่ไม่ระบุ",
-              weight: "bold",
-              size: "xl",
-              wrap: true,
-            },
-            {
-              type: "text",
-              text: answerText || "ไม่มีรายละเอียดเพิ่มเติม",
-              size: "sm",
-              wrap: true,
-              margin: "md",
-            },
-            {
-              type: "text",
-              text: safeImageSource,
-              wrap: true,
-              margin: "md",
-              size: "sm",
-              color: "#aaaaaa",
-            },
-          ],
-        },
-        footer: {
-          type: "box",
-          layout: "vertical",
-          spacing: "sm",
-          contents: footerContent,
-        },
-      };
-    });
+    const imageBubbles = imageUrls.map((img) => ({
+      type: "bubble",
+      hero: {
+        type: "image",
+        url: img,
+        size: "full",
+        aspectRatio: "4:3",
+        aspectMode: "cover",
+      },
+    }));
 
-    return { type: "carousel", contents: bubbles };
+    return {
+      type: "carousel",
+      contents: [textBubble, ...imageBubbles],
+    };
   } catch (error) {
     console.error("❌ Error creating Flex Message:", error);
     return null;
@@ -3172,79 +3156,109 @@ const sendFlexMessageTourist = async (agent, intentName, dbClient) => {
   const districtType = receivedParams?.district_type || null;
   const type = receivedParams?.type || null; // เพิ่มตัวแปร type
   console.log("📍 Received Parameters:", receivedParams);
-  
+
   let updatedIntentName = intentName; // ค่าเริ่มต้นเป็น intentName ปกติ
-  
+
   if (questionText === intentName) {
-      updatedIntentName = intentName; // ใช้ intentName ถ้ามันตรงกับ questionText
-      console.log(`✅ ใช้ intentName โดยตรง: ${updatedIntentName}`);
+    updatedIntentName = intentName; // ใช้ intentName ถ้ามันตรงกับ questionText
+    console.log(`✅ ใช้ intentName โดยตรง: ${updatedIntentName}`);
   } else if (districtType) {
-      updatedIntentName = districtType; // ใช้ districtType ถ้ามี
-      console.log(`✅ ใช้ districtType แทน: ${updatedIntentName}`);
+    updatedIntentName = districtType; // ใช้ districtType ถ้ามี
+    console.log(`✅ ใช้ districtType แทน: ${updatedIntentName}`);
   } else if (type) {
-      updatedIntentName = type; // ใช้ type ถ้ามี
-      console.log(`✅ ใช้ type แทน: ${updatedIntentName}`);
+    updatedIntentName = type; // ใช้ type ถ้ามี
+    console.log(`✅ ใช้ type แทน: ${updatedIntentName}`);
   } else {
-      console.log(`⚠️ Intent ไม่ตรงกับ districtType หรือ type! ใช้ intentName เดิม (${intentName})`);
+    console.log(
+      `⚠️ Intent ไม่ตรงกับ districtType หรือ type! ใช้ intentName เดิม (${intentName})`
+    );
   }
-  
+
   // 🛠 ตรวจสอบหมวดหมู่อาหาร (ทำเฉพาะเมื่อไม่มี districtType หรือ type)
   if (!districtType && !type) {
-      const isanKeywords = [
-        "อาหารอีสาน", "อีสาน", "ไก่ย่าง", "ลาบ", "ก้อย", "แกงอ่อม",
-        "ตำบักหุ่ง", "ตำปูปลาร้า", "แจ่ว", "ต้มแซ่บ", "หมก", "ป่น",
-        "ข้าวจี่", "ข้าวเหนียว", "อ่อม", "ซุปหน่อไม้"
-      ];
-      const thaiKeywords = ["อาหารไทย", "อาหารไทยแท้", "ไทย"];
-      const ItaliaKeywords = [
-        "อาหารจีน", "อาหารอิตาเลี่ยน", "อาหารอินเตอร์", "อาหารต่างชาติ",
-        "จีน", "อิตาเลี่ยน", "อินเตอร์", "ต่างชาติ"
-      ];
-      const OtherKeywords = [
-        "อาหารพวกเส้น", "เส้น", "อาหารริมทาง", "อาหารสตรีทฟู้ด",
-        "สตรีทฟู้ด", "อาหารจานเดียว", "อาหารทั่วไป"
-      ];
-      const MichelinKeywords = ["Michelin", "มิชลินไกด์", "มิชลิน"];
-      const RecommentKeywords = [
-        "อาหารยอดฮิต", "อาหารดัง", "อาหารกระแส", "ร้านอาหารดัง", "อาหารสุดฮิต"
-      ];
-  
-      const isanRegex = new RegExp(isanKeywords.join("|"), "i");
-      const thaiRegex = new RegExp(thaiKeywords.join("|"), "i");
-      const ItaliaRegex = new RegExp(ItaliaKeywords.join("|"), "i");
-      const OtherRegex = new RegExp(OtherKeywords.join("|"), "i");
-      const MichelinRegex = new RegExp(MichelinKeywords.join("|"), "i");
-      const RecommentRegex = new RegExp(RecommentKeywords.join("|"), "i");
-  
-      if (isanRegex.test(questionText)) {
-          updatedIntentName = "ประเภทอาหารอีสาน";
-      } else if (thaiRegex.test(questionText)) {
-          updatedIntentName = "ประเภทอาหารไทย";
-      } else if (OtherRegex.test(questionText)) {
-          updatedIntentName = "ประเภทอาหารทั่วไป";
-      } else if (ItaliaRegex.test(questionText)) {
-          updatedIntentName = "ประเภทอาหารอินเตอร์";
-      } else if (MichelinRegex.test(questionText)) {
-          updatedIntentName = "อาหารระดับมิชลินไกด์";
-      } else if (RecommentRegex.test(questionText)) {
-          updatedIntentName = "ร้านอาหารดังยอดฮิต";
-      }
+    const isanKeywords = [
+      "อาหารอีสาน",
+      "อีสาน",
+      "ไก่ย่าง",
+      "ลาบ",
+      "ก้อย",
+      "แกงอ่อม",
+      "ตำบักหุ่ง",
+      "ตำปูปลาร้า",
+      "แจ่ว",
+      "ต้มแซ่บ",
+      "หมก",
+      "ป่น",
+      "ข้าวจี่",
+      "ข้าวเหนียว",
+      "อ่อม",
+      "ซุปหน่อไม้",
+    ];
+    const thaiKeywords = ["อาหารไทย", "อาหารไทยแท้", "ไทย"];
+    const ItaliaKeywords = [
+      "อาหารจีน",
+      "อาหารอิตาเลี่ยน",
+      "อาหารอินเตอร์",
+      "อาหารต่างชาติ",
+      "จีน",
+      "อิตาเลี่ยน",
+      "อินเตอร์",
+      "ต่างชาติ",
+    ];
+    const OtherKeywords = [
+      "อาหารพวกเส้น",
+      "เส้น",
+      "อาหารริมทาง",
+      "อาหารสตรีทฟู้ด",
+      "สตรีทฟู้ด",
+      "อาหารจานเดียว",
+      "อาหารทั่วไป",
+    ];
+    const MichelinKeywords = ["Michelin", "มิชลินไกด์", "มิชลิน"];
+    const RecommentKeywords = [
+      "อาหารยอดฮิต",
+      "อาหารดัง",
+      "อาหารกระแส",
+      "ร้านอาหารดัง",
+      "อาหารสุดฮิต",
+    ];
+
+    const isanRegex = new RegExp(isanKeywords.join("|"), "i");
+    const thaiRegex = new RegExp(thaiKeywords.join("|"), "i");
+    const ItaliaRegex = new RegExp(ItaliaKeywords.join("|"), "i");
+    const OtherRegex = new RegExp(OtherKeywords.join("|"), "i");
+    const MichelinRegex = new RegExp(MichelinKeywords.join("|"), "i");
+    const RecommentRegex = new RegExp(RecommentKeywords.join("|"), "i");
+
+    if (isanRegex.test(questionText)) {
+      updatedIntentName = "ประเภทอาหารอีสาน";
+    } else if (thaiRegex.test(questionText)) {
+      updatedIntentName = "ประเภทอาหารไทย";
+    } else if (OtherRegex.test(questionText)) {
+      updatedIntentName = "ประเภทอาหารทั่วไป";
+    } else if (ItaliaRegex.test(questionText)) {
+      updatedIntentName = "ประเภทอาหารอินเตอร์";
+    } else if (MichelinRegex.test(questionText)) {
+      updatedIntentName = "อาหารระดับมิชลินไกด์";
+    } else if (RecommentRegex.test(questionText)) {
+      updatedIntentName = "ร้านอาหารดังยอดฮิต";
+    }
   }
-  
+
   // 🛠 ถ้า intentName ที่อัปเดตมาไม่ตรงกับ intentName เดิม และมี districtType -> ใช้ districtType แทน
   if (updatedIntentName !== intentName && districtType) {
-      console.log(`⚠️ Intent ไม่ตรงกัน! ใช้ค่าอำเภอแทน: ${districtType}`);
-      updatedIntentName = districtType;
+    console.log(`⚠️ Intent ไม่ตรงกัน! ใช้ค่าอำเภอแทน: ${districtType}`);
+    updatedIntentName = districtType;
   }
-  
+
   console.log("🔎 ตรวจสอบ intent:", {
-      questionText,
-      intentName,
-      updatedIntentName,
-      districtType,
-      type,
+    questionText,
+    intentName,
+    updatedIntentName,
+    districtType,
+    type,
   });
-  
+
   try {
     const data = await fetchFlexMessageWithPlace(updatedIntentName, dbClient);
     console.log("🚀 Fetched Data:", data);
@@ -3536,28 +3550,27 @@ const handleIntent = async (
         ""
       );
 
-      // ตรวจสอบว่ามีวันที่ในรูปแบบ dd/mm/yyyy หรือไม่
       const datePattern = /\b\d{1,2}\/\d{1,2}\/\d{4}\b/g;
       const dateMatches = normalized.match(datePattern);
 
-      // ลบคำที่ไม่จำเป็นออก ยกเว้น "/"
       normalized = normalized
         .replace(/เปิด/g, "")
-        .replace(/(?<!2499 )cafe|หมูกระทะ|สนามบิน|บุฟเฟต์|ร้าน|คาเฟ่/gi, "")
+        .replace(
+          /(?<!2499 )cafe|อีสาน|หมูกระทะ|ร้านอาหาร|สนามบิน|บุฟเฟต์|ร้าน|คาเฟ่/gi,
+          ""
+        )
         .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, "");
 
-      // ลบสัญลักษณ์อื่นๆ แต่ไม่ลบ "/"
       normalized = normalized
         .replace(/[()\-,.\\_]/g, "")
         .replace(/\s+/g, " ")
         .trim();
 
-      // ถ้ามีวันที่ ให้เพิ่มคืนเข้าไป
       if (dateMatches) {
         normalized = dateMatches[0] + " " + normalized;
       }
 
-      console.log(`✅ Normalized Output: "${normalized}"`); // ตรวจสอบผลลัพธ์หลัง normalize
+      console.log(`✅ Normalized Output: "${normalized}"`);
       return normalized;
     };
 
@@ -3579,7 +3592,6 @@ const handleIntent = async (
     console.log(`🔍 Normalized Place Name: "${normalizedLocation}"`);
     console.log(`🔍 Normalized Question Text: "${normalizedQuestion}"`);
 
-    // ✅ ถ้า location และ questionText ตรงกัน ให้ใช้ location ทันที
     if (
       normalizedLocation === normalizedQuestion ||
       normalizedQuestion.includes(normalizedLocation) ||
@@ -3593,7 +3605,6 @@ const handleIntent = async (
       );
       placeName = normalizedLocation;
     } else {
-      // ✅ คำนวณ similarity
       const similarityScore = getSimilarityScore(
         normalizedLocation,
         normalizedQuestion
@@ -3610,7 +3621,6 @@ const handleIntent = async (
         );
         placeName = normalizedLocation;
       } else {
-        // 🚨 **แทนที่จะเรียก API ทันที ให้ลองเช็คฐานข้อมูลก่อน**
         console.log("🚨 Similarity ต่ำ ต้องลองเช็คฐานข้อมูลก่อน...");
         const dbResult = await getAnswerForIntent(
           intentName,
@@ -3852,10 +3862,14 @@ const handleIntent = async (
         console.log("===== Debugging filterByKeyword Output =====");
         console.log("answerText:", answerText.response);
         console.log("contactLink:", answerText.contactLink);
+        console.log("imageLink:", answerText.placeImageUrl);
+        console.log("imageDetail:", answerText.imageDetails);
         console.log("===========================================");
 
         responseMessage = answerText.response || "ไม่พบข้อมูลที่ตรงกับคำสำคัญ";
         contactLink = answerText.contactLink;
+        imageLink = answerText.placeImageUrl;
+        imageDetails = answerText.imageDetails;
         sourceType = "website";
         isFromWeb = true;
         const cleanedLocationName = removeLeadingNumbers(
@@ -3870,28 +3884,25 @@ const handleIntent = async (
         console.log(`Answer source: ${sourceType}`);
         console.log(`Answer text: ${responseMessage}`);
 
-        const imageUrl =
-          bestResult?.รูปภาพ?.[0] ||
-          "https://via.placeholder.com/400x300.png?text=No+Image";
-        const imageDescription =
-          bestResult?.รายละเอียดรูปภาพ || "ไม่มีข้อมูลเพิ่มเติม";
-
         await saveWebAnswer(
           responseMessage,
           cleanedLocationName,
           intentName,
           isFromWeb,
           dbClient,
-          imageUrl,
-          imageDescription,
+          imageLink,
+          imageDetails,
           contactLink
         );
+
         console.log("Answer saved to database from webData sources.");
       }
+
       if (displayName === "รายละเอียด" && typeof responseMessage === "object") {
         const payload = new Payload("LINE", responseMessage, {
           sendAsMessage: true,
         });
+        await sendFlexMessageToUser(lineId, responseMessage);
         agent.add(payload);
         return;
       }
@@ -3979,7 +3990,9 @@ const handleWebhookRequest = async (req, res, dbClient) => {
     intentMap.set("เวลาเปิดทำการ", (agent) =>
       handleIntent(agent, dbClient, questionText, location, displayName)
     );
-
+    intentMap.set("สถานที่ใกล้เคียง", (agent) =>
+      handleNearbyPlacesIntent(agent, questionText, dbClient)
+    );
     intentMap.set("เที่ยวขอนแก่น", (agent) =>
       sendFlexMessageTourist(agent, "เที่ยวขอนแก่น", dbClient)
     );
@@ -3998,13 +4011,6 @@ const handleWebhookRequest = async (req, res, dbClient) => {
     intentMap.set("ประเภทอาหารทั่วไป", (agent) =>
       sendFlexMessageTourist(agent, "ประเภทอาหารทั่วไป", dbClient)
     );
-    intentMap.set("แหล่งท่องเที่ยวสำหรับครอบครัวและเด็ก", (agent) =>
-      sendFlexMessageTourist(
-        agent,
-        "แหล่งท่องเที่ยวสำหรับครอบครัวและเด็ก",
-        dbClient
-      )
-    );
     intentMap.set("ประเภทอาหารอินเตอร์", (agent) =>
       sendFlexMessageTourist(agent, "ประเภทอาหารอินเตอร์", dbClient)
     );
@@ -4020,7 +4026,7 @@ const handleWebhookRequest = async (req, res, dbClient) => {
     intentMap.set("อำเภอน้ำพอง", (agent) =>
       sendFlexMessageTourist(agent, "อำเภอน้ำพอง ", dbClient)
     );
- 
+
     intentMap.set("อำเภออุบลรัตน์", (agent) =>
       sendFlexMessageTourist(agent, "อำเภออุบลรัตน์", dbClient)
     );
@@ -4060,8 +4066,12 @@ const handleWebhookRequest = async (req, res, dbClient) => {
     intentMap.set("แหล่งท่องเที่ยวทางธรรมชาติ", (agent) =>
       sendFlexMessageTourist(agent, "แหล่งท่องเที่ยวทางธรรมชาติ", dbClient)
     );
-    intentMap.set("แหล่งท่องเที่ยวประเภทน้ำตก", (agent) =>
-      sendFlexMessageTourist(agent, "แหล่งท่องเที่ยวประเภทน้ำตก", dbClient)
+    intentMap.set("แหล่งท่องเที่ยวสำหรับครอบครัวและเด็ก", (agent) =>
+      sendFlexMessageTourist(
+        agent,
+        "แหล่งท่องเที่ยวสำหรับครอบครัวและเด็ก",
+        dbClient
+      )
     );
     intentMap.set("แหล่งท่องเที่ยวเพื่อนันทนาการ", (agent) =>
       sendFlexMessageTourist(agent, "แหล่งท่องเที่ยวเพื่อนันทนาการ", dbClient)
@@ -4637,5 +4647,149 @@ async function sendFlexMessage(agent, messageType, dbClient) {
     agent.add("ขออภัย, ไม่สามารถส่งข้อมูลให้คุณได้ในขณะนี้.");
   }
 }
+
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+const findNearbyPlacesInDatabase = async (lat, lon, radius = 10, dbClient) => {
+  if (!dbClient || typeof dbClient.query !== "function") {
+    console.error("❌ Invalid database client provided");
+    return [];
+  }
+
+  const query = `
+    SELECT DISTINCT ON (p.id) p.id, p.name, p.address, p.admission_fee, p.contact_link, p.opening_hours, p.created_at, p.latitude, p.longitude,
+           pi.image_link, pi.image_detail,
+           (6371 * acos(cos(radians($1)) * cos(radians(p.latitude)) * cos(radians(p.longitude) - radians($2)) + sin(radians($1)) * sin(radians(p.latitude)))) AS distance
+    FROM places p
+    LEFT JOIN place_images pi ON p.id = pi.place_id
+    WHERE (6371 * acos(cos(radians($1)) * cos(radians(p.latitude)) * cos(radians(p.longitude) - radians($2)) + sin(radians($1)) * sin(radians(p.latitude)))) <= $3
+    ORDER BY p.id, distance
+    LIMIT 5;
+  `;
+
+  console.log(
+    `🔍 Running query with lat: ${lat}, lon: ${lon}, radius: ${radius}`
+  );
+
+  try {
+    const result = await dbClient.query(query, [lat, lon, radius]);
+    console.log("✅ Query result from database:", result.rows);
+
+    return result.rows;
+  } catch (error) {
+    console.error("Error fetching nearby places from database:", error);
+    return [];
+  }
+};
+
+const getCoordinatesFromGeocoding = async (placeName) => {
+  const apiKey = "AIzaSyCiooeTU5bPZ0h5PrcSZkd2hGVQzmdq4uc";
+
+  const cleanedPlaceName = placeName.replace("สถานที่ใกล้เคียง", "").trim();
+
+  const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+    cleanedPlaceName
+  )}&key=${apiKey}`;
+
+  try {
+    const response = await axios.get(geocodeUrl);
+    console.log(`🌍 API Response for "${cleanedPlaceName}":`, response.data);
+
+    if (response.data.status === "OK" && response.data.results.length > 0) {
+      const location = response.data.results[0].geometry.location;
+      console.log(
+        `🌍 Geocoding API: พิกัดสำหรับสถานที่ "${cleanedPlaceName}" คือ`,
+        location
+      );
+      return location;
+    } else {
+      console.error("ไม่พบข้อมูลพิกัดสำหรับสถานที่นี้");
+      return null;
+    }
+  } catch (error) {
+    console.error("เกิดข้อผิดพลาดในการเรียกใช้ Google Geocoding API:", error);
+    return null;
+  }
+};
+
+const getNearbyPlacesInfo = async (placeName, dbClient) => {
+  const coordinates = await getCoordinatesFromGeocoding(placeName);
+  if (!coordinates) {
+    console.log("❌ No coordinates found for place:", placeName);
+    return "ไม่สามารถหาข้อมูลพิกัดของสถานที่ที่คุณค้นหาได้.";
+  }
+
+  console.log(`🌍 Retrieved coordinates for "${placeName}":`, coordinates);
+
+  const nearbyPlacesFromDb = await findNearbyPlacesInDatabase(
+    coordinates.lat,
+    coordinates.lng,
+    10,
+    dbClient
+  );
+  if (nearbyPlacesFromDb.length === 0) {
+    console.log("❌ No nearby places found in the database for:", placeName);
+    return "ไม่พบสถานที่ใกล้เคียงในฐานข้อมูลที่คุณค้นหาค่ะ.";
+  }
+
+  let responseMessage = "สถานที่ใกล้เคียงที่พบจากฐานข้อมูล:\n";
+  nearbyPlacesFromDb.forEach((place, index) => {
+    responseMessage += `${index + 1}. ${place.name} - ${
+      place.address
+    } (ระยะทาง ${getDistance(
+      coordinates.lat,
+      coordinates.lng,
+      place.latitude,
+      place.longitude
+    ).toFixed(2)} กม.)\n`;
+  });
+
+  return responseMessage;
+};
+
+const handleNearbyPlacesIntent = async (agent, questionText, dbClient) => {
+  const placeName = questionText;
+  console.log("🔍 Handling nearby places intent for:", placeName);
+
+  const lineId = agent.originalRequest.payload.data.source.userId; // ดึง Line ID จาก agent
+  const responseMessage = await getNearbyPlacesInfo(placeName, dbClient); // ส่ง dbClient ไปที่ getNearbyPlacesInfo
+  console.log("✅ Final Response for Nearby Places:", responseMessage);
+
+  if (dbClient) {
+    await saveConversation(
+      questionText,
+      `สถานที่ใกล้เคียง`,
+      lineId, 
+      null,
+      null,
+      "Flex Message",
+      null,
+      dbClient
+    );
+  } else {
+    console.warn(
+      "⚠️ Database client is not available. Skipping saveConversation."
+    );
+  }
+
+  const payload = new Payload(
+    "LINE",
+    { type: "text", text: responseMessage },
+    { sendAsMessage: true }
+  );
+  agent.add(payload);
+};
 
 module.exports = { handleWebhookRequest };

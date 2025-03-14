@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { reactive } from 'vue'
 import axios from 'axios'
 import { ENDPOINT } from '@/constants/endpoint'
 import Swal from 'sweetalert2'
 
 export const usePlacesStore = defineStore('places', () => {
-  const places = ref([])
+  const places = reactive([])
 
   async function fetchPlaces() {
     console.log('📥 Fetching places from:', ENDPOINT.PLACES)
@@ -14,10 +14,11 @@ export const usePlacesStore = defineStore('places', () => {
       console.log('✅ Places fetched successfully:', res.data)
 
       if (res.status === 200) {
-        places.value = res.data.map(place => ({
+        places.length = 0  
+        places.push(...res.data.map(place => ({
           ...place,
-          images: place.images || [] 
-        }))
+          images: place.images || []
+        })))
       }
     } catch (error) {
       console.error('❌ Error fetching places:', error)
@@ -63,7 +64,15 @@ export const usePlacesStore = defineStore('places', () => {
       console.error('❌ Error updating place:', error)
     }
   }
-
+  const updatePlaceImages = async (placeId, newImages) => {
+    try {
+      const response = await axios.patch(`${ENDPOINT.PLACES}/${placeId}/images`, { images: newImages });
+      console.log('✅ Images updated successfully:', response.data);
+    } catch (error) {
+      console.error('❌ Error updating images:', error.response ? error.response.data : error.message);
+    }
+  };
+  
   const deletePlaces = async (id) => {
     if (!id) {
       console.error('❌ Error: Place ID is required for deletion')
@@ -85,6 +94,7 @@ export const usePlacesStore = defineStore('places', () => {
   return {
     places,
     fetchPlaces,
+    updatePlaceImages,
     addPlaces,
     updatePlaces,
     deletePlaces

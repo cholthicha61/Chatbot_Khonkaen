@@ -441,11 +441,21 @@ const deleteEvent = async (id) => {
   }
 };
 
+const updatePlaceImages = async (placeId, newImages) => {
+  try {
+    const response = await axios.patch(`${ENDPOINT.PLACES}/${placeId}/images`, { images: newImages });
+    console.log('✅ Images updated successfully:', response.data);
+  } catch (error) {
+    console.error('❌ Error updating images:', error.response ? error.response.data : error.message);
+  }
+};
+
 
   return {
     userName,
     userEmail,
     userAvatar,
+    updatePlaceImages,
     isFieldFocusRegistered,
     clients,
     history,

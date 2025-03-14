@@ -37,6 +37,8 @@
                 <th class="px-4 py-2 text-left">Opening Hours</th>
                 <th class="px-4 py-2 text-left">Address</th>
                 <th class="px-4 py-2 text-left">Contact Link</th>
+                <th class="px-4 py-2 text-left">latitude</th>
+                <th class="px-4 py-2 text-left">longitude</th>
                 <th class="px-4 py-2 text-left">Image Link</th>
                 <th class="px-4 py-2 text-left">Created</th>
                 <th class="px-4 py-2 text-left">Actions</th>
@@ -80,7 +82,6 @@
                   </div>
                 </td>
 
-       
                 <td :class="!place.opening_hours ? 'text-red-500' : ''">
                   <div v-if="place.opening_hours && place.opening_hours.length > 20">
                     {{ place.opening_hours.slice(0, 20) }}...
@@ -111,7 +112,6 @@
                   </div>
                 </td>
 
-                
                 <td>
                   <a
                     :href="place.contact_link"
@@ -140,6 +140,13 @@
                     </div>
                   </div>
                   <span v-else class="text-red-500">No images available</span>
+                </td>
+
+                <td :class="!place.latitude ? 'text-red-500' : ''">
+                  {{ formatLatLong(place.latitude) }}
+                </td>
+                <td :class="!place.longitude ? 'text-red-500' : ''">
+                  {{ formatLatLong(place.longitude) }}
                 </td>
 
                 <td>{{ formatDate(place.created_at) }}</td>
@@ -264,6 +271,34 @@
               ></textarea>
             </div>
 
+            <!-- Add Latitude Field -->
+            <div class="mb-4">
+              <label for="add-latitude" class="block mb-2 font-semibold text-gray-700">
+                Latitude:
+              </label>
+              <input
+                id="add-latitude"
+                v-model="currentPlaces.latitude"
+                type="text"
+                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter latitude (optional)"
+              />
+            </div>
+
+            <!-- Add Longitude Field -->
+            <div class="mb-4">
+              <label for="add-longitude" class="block mb-2 font-semibold text-gray-700">
+                Longitude:
+              </label>
+              <input
+                id="add-longitude"
+                v-model="currentPlaces.longitude"
+                type="text"
+                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter longitude (optional)"
+              />
+            </div>
+
             <div class="mb-4">
               <label class="block mb-2 font-semibold text-gray-700"> Images: </label>
 
@@ -385,6 +420,33 @@
                 placeholder="Enter opening hours (optional)"
               ></textarea>
             </div>
+            <!-- Edit Latitude Field -->
+            <div class="mb-4">
+              <label for="edit-latitude" class="block mb-2 font-semibold text-gray-700">
+                Latitude:
+              </label>
+              <input
+                id="edit-latitude"
+                v-model="currentPlaces.latitude"
+                type="text"
+                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter latitude"
+              />
+            </div>
+
+            <!-- Edit Longitude Field -->
+            <div class="mb-4">
+              <label for="edit-longitude" class="block mb-2 font-semibold text-gray-700">
+                Longitude:
+              </label>
+              <input
+                id="edit-longitude"
+                v-model="currentPlaces.longitude"
+                type="text"
+                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter longitude"
+              />
+            </div>
 
             <div class="mb-4">
               <label for="add-contact-link" class="block mb-2 font-semibold text-gray-700">
@@ -471,6 +533,8 @@ const currentPlaces = ref({
   opening_hours: '',
   address: '',
   contact_link: '',
+  latitude: '',
+  longitude: '',
   images: []
 })
 
@@ -489,7 +553,9 @@ function openAddModal() {
     opening_hours: '',
     address: '',
     contact_link: '',
-    images: [] // ✅ ตั้งค่า images ให้เป็น array เสมอ
+    latitude: '',
+    longitude: '',
+    images: []
   }
 }
 
@@ -767,7 +833,15 @@ function showFullDescription(description) {
     confirmButtonColor: '#0277bd'
   })
 }
+function formatLatLong(value) {
+  const floatVal = parseFloat(value)
 
+  if (isNaN(floatVal)) {
+    return 'No data available'
+  }
+
+  return floatVal.toFixed(4)
+}
 </script>
 
 <style>

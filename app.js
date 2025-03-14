@@ -59,15 +59,17 @@ const createTables = async () => {
 
   const createPlacesTable = `
     CREATE TABLE IF NOT EXISTS places (
-  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  description TEXT,
-  admission_fee TEXT,
-  address TEXT,
-  contact_link TEXT,
-  opening_hours VARCHAR(255),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+        id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        admission_fee TEXT,
+        address TEXT,
+        contact_link TEXT,
+        opening_hours VARCHAR(255),
+        latitude DOUBLE PRECISION,  
+        longitude DOUBLE PRECISION, 
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
   `;
 
   const createPlaceImagesTable = `

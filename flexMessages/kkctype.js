@@ -43,9 +43,9 @@ function createkkutypeFlexMessage() {
               contents: [
                 {
                   action: {
-                    text: "แหล่งท่องเที่ยวประเภทน้ำตก",
+                    text: "แหล่งท่องเที่ยวสำหรับครอบครัวและเด็ก",
                     type: "message",
-                    label: "แหล่งท่องเที่ยวประเภทน้ำตก",
+                    label: "แหล่งท่องเที่ยวสำหรับครอบครัวและเด็ก",
                   },
                   type: "button",
                   color: "#3399FF",

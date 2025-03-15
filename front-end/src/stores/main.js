@@ -203,40 +203,41 @@ export const useMainStore = defineStore('main', () => {
 
   async function fetchUsers() {
     try {
-      const res = await axios.get('http://localhost:8080/users')
+      const res = await axios.get(ENDPOINT.USERS);  // ใช้ ENDPOINT.USERS แทน URL ตายตัว
       if (res.status === 200) {
-        console.log('Fetched Users:', res.data)
-        users.value = res.data
+        console.log('Fetched Users:', res.data);
+        users.value = res.data;
       }
     } catch (error) {
-      console.error('Error fetching Users:', error)
+      console.error('Error fetching Users:', error);
     }
   }
-
+  
   async function fetchWeb() {
     try {
-      const res = await axios.get('http://localhost:8080/web')
-      console.log('Response data:', res.data)
+      const res = await axios.get(ENDPOINT.WEB);  // ใช้ ENDPOINT.WEB แทน URL ตายตัว
+      console.log('Response data:', res.data);
       if (res.status === 200) {
-        web.value = res.data
-        console.log('Fetched web answers:', web.value)
+        web.value = res.data;
+        console.log('Fetched web answers:', web.value);
       }
     } catch (error) {
-      console.error('Error fetching web answers:', error)
+      console.error('Error fetching web answers:', error);
     }
   }
-
+  
   async function fetchConversations() {
     try {
-      const res = await axios.get('http://localhost:8080/conversations')
+      const res = await axios.get(ENDPOINT.CONVERSATIONS);  // ใช้ ENDPOINT.CONVERSATIONS แทน URL ตายตัว
       if (res.status === 200) {
-        console.log('Fetched conversations:', res.data)
-        conversations.value = res.data
+        console.log('Fetched conversations:', res.data);
+        conversations.value = res.data;
       }
     } catch (error) {
-      console.error('Error fetching conversations:', error)
+      console.error('Error fetching conversations:', error);
     }
   }
+  
 
   async function getTableCounts() {
     const url = `${ENDPOINT.DASHBOARD}`

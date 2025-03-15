@@ -169,168 +169,168 @@ router.patch("/:id/images", async (req, res) => {
   }
 });
 
-// router.patch("/:id", async (req, res) => {
-//   const { id } = req.params;
-//   const {
-//     name,
-//     description,
-//     admission_fee,
-//     address,
-//     contact_link,
-//     opening_hours,
-//     latitude,
-//     longitude,
-//     images,
-//   } = req.body;
+router.patch("/:id", async (req, res) => {
+  const { id } = req.params;
+  const {
+    name,
+    description,
+    admission_fee,
+    address,
+    contact_link,
+    opening_hours,
+    latitude,
+    longitude,
+    images,
+  } = req.body;
 
-//   const updateValues = [];
-//   const setClauses = [];
+  const updateValues = [];
+  const setClauses = [];
 
-//   // Update the place information
-//   if (name !== undefined) {
-//     setClauses.push(`name = $${updateValues.length + 1}`);
-//     updateValues.push(name);
-//   }
-//   if (description !== undefined) {
-//     setClauses.push(`description = $${updateValues.length + 1}`);
-//     updateValues.push(description);
-//   }
-//   if (admission_fee !== undefined) {
-//     setClauses.push(`admission_fee = $${updateValues.length + 1}`);
-//     updateValues.push(admission_fee);
-//   }
-//   if (address !== undefined) {
-//     setClauses.push(`address = $${updateValues.length + 1}`);
-//     updateValues.push(address);
-//   }
-//   if (contact_link !== undefined) {
-//     setClauses.push(`contact_link = $${updateValues.length + 1}`);
-//     updateValues.push(contact_link);
-//   }
-//   if (opening_hours !== undefined) {
-//     setClauses.push(`opening_hours = $${updateValues.length + 1}`);
-//     updateValues.push(opening_hours);
-//   }
-//   if (latitude !== undefined) {
-//     setClauses.push(`latitude = $${updateValues.length + 1}`);
-//     updateValues.push(latitude);
-//   }
-//   if (longitude !== undefined) {
-//     setClauses.push(`longitude = $${updateValues.length + 1}`);
-//     updateValues.push(longitude);
-//   }
-
-//   // If no fields to update, return an error
-//   if (setClauses.length === 0) {
-//     return res.status(400).json({ error: "No valid fields to update" });
-//   }
-
-//   // Add WHERE clause for place ID
-//   const whereClause = `WHERE id = $${updateValues.length + 1}`;
-//   updateValues.push(id);
-
-//   // Update the place information in the database
-//   const updateQuery = `
-//     UPDATE places
-//     SET ${setClauses.join(", ")} ${whereClause}
-//     RETURNING *;
-//   `;
-//   try {
-//     const placeResult = await req.client.query(updateQuery, updateValues);
-//     if (!placeResult.rows.length) {
-//       return res.status(404).json({ error: "Place not found" });
-//     }
-
-//     // Update images if present in the body
-//     if (images && images.length) {
-//       // Delete existing images
-//       await req.client.query("DELETE FROM place_images WHERE place_id = $1;", [id]);
-
-//       // Insert new images
-//       const imageValues = images.map((img) => [
-//         id,
-//         img.image_link,
-//         img.image_detail || null,
-//       ]);
-//       const imageQuery = `
-//         INSERT INTO place_images (place_id, image_link, image_detail)
-//         VALUES ${imageValues
-//           .map((_, i) => `($${i * 3 + 1}, $${i * 3 + 2}, $${i * 3 + 3})`)
-//           .join(", ")}
-//         RETURNING *;
-//       `;
-//       await req.client.query(imageQuery, imageValues.flat());
-//     }
-
-//     // Send back the updated place
-//     res.json(placeResult.rows[0]);
-//   } catch (err) {
-//     console.error("Error updating place", err.stack);
-//     res.status(500).json({ error: "Internal Server Error" });
-//   }
-// });
-
-router.patch("/", async (req, res) => {
-  const places = Array.isArray(req.body) ? req.body : [req.body];
-
-  if (!places.length) {
-    return res.status(400).json({ error: "Invalid input: At least one place is required" });
+  // Update the place information
+  if (name !== undefined) {
+    setClauses.push(`name = $${updateValues.length + 1}`);
+    updateValues.push(name);
+  }
+  if (description !== undefined) {
+    setClauses.push(`description = $${updateValues.length + 1}`);
+    updateValues.push(description);
+  }
+  if (admission_fee !== undefined) {
+    setClauses.push(`admission_fee = $${updateValues.length + 1}`);
+    updateValues.push(admission_fee);
+  }
+  if (address !== undefined) {
+    setClauses.push(`address = $${updateValues.length + 1}`);
+    updateValues.push(address);
+  }
+  if (contact_link !== undefined) {
+    setClauses.push(`contact_link = $${updateValues.length + 1}`);
+    updateValues.push(contact_link);
+  }
+  if (opening_hours !== undefined) {
+    setClauses.push(`opening_hours = $${updateValues.length + 1}`);
+    updateValues.push(opening_hours);
+  }
+  if (latitude !== undefined) {
+    setClauses.push(`latitude = $${updateValues.length + 1}`);
+    updateValues.push(latitude);
+  }
+  if (longitude !== undefined) {
+    setClauses.push(`longitude = $${updateValues.length + 1}`);
+    updateValues.push(longitude);
   }
 
-  const updateQueries = [];
-  const updateValues = [];
-
-  places.forEach((place) => {
-    if (!place.id || typeof place.id !== "number") {
-      return res.status(400).json({ error: `Invalid or missing ID for place` });
-    }
-
-    let setClause = [];
-    let values = [];
-
-    if (place.latitude !== undefined) {
-      if (typeof place.latitude === "number") {
-        setClause.push(`latitude = $${values.length + 1}::double precision`);
-        values.push(place.latitude);
-      } else {
-        return res.status(400).json({ error: `Invalid latitude value for place ID ${place.id}` });
-      }
-    }
-
-    if (place.longitude !== undefined) {
-      if (typeof place.longitude === "number") {
-        setClause.push(`longitude = $${values.length + 1}::double precision`);
-        values.push(place.longitude);
-      } else {
-        return res.status(400).json({ error: `Invalid longitude value for place ID ${place.id}` });
-      }
-    }
-
-    if (setClause.length > 0) {
-      values.push(place.id);
-      const query = `UPDATE places SET ${setClause.join(", ")} WHERE id = $${values.length} RETURNING *;`;
-      updateQueries.push({ query, values });
-    }
-  });
-
-  if (updateQueries.length === 0) {
+  // If no fields to update, return an error
+  if (setClauses.length === 0) {
     return res.status(400).json({ error: "No valid fields to update" });
   }
 
-  try {
-    const results = await Promise.all(
-      updateQueries.map(({ query, values }) => req.client.query(query, values))
-    );
+  // Add WHERE clause for place ID
+  const whereClause = `WHERE id = $${updateValues.length + 1}`;
+  updateValues.push(id);
 
-    res.json({
-      message: "Places updated successfully",
-      results: results.map((result) => result.rows),
-    });
+  // Update the place information in the database
+  const updateQuery = `
+    UPDATE places
+    SET ${setClauses.join(", ")} ${whereClause}
+    RETURNING *;
+  `;
+  try {
+    const placeResult = await req.client.query(updateQuery, updateValues);
+    if (!placeResult.rows.length) {
+      return res.status(404).json({ error: "Place not found" });
+    }
+
+    // Update images if present in the body
+    if (images && images.length) {
+      // Delete existing images
+      await req.client.query("DELETE FROM place_images WHERE place_id = $1;", [id]);
+
+      // Insert new images
+      const imageValues = images.map((img) => [
+        id,
+        img.image_link,
+        img.image_detail || null,
+      ]);
+      const imageQuery = `
+        INSERT INTO place_images (place_id, image_link, image_detail)
+        VALUES ${imageValues
+          .map((_, i) => `($${i * 3 + 1}, $${i * 3 + 2}, $${i * 3 + 3})`)
+          .join(", ")}
+        RETURNING *;
+      `;
+      await req.client.query(imageQuery, imageValues.flat());
+    }
+
+    // Send back the updated place
+    res.json(placeResult.rows[0]);
   } catch (err) {
-    console.error("Error updating places", err.stack);
+    console.error("Error updating place", err.stack);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+// router.patch("/", async (req, res) => {
+//   const places = Array.isArray(req.body) ? req.body : [req.body];
+
+//   if (!places.length) {
+//     return res.status(400).json({ error: "Invalid input: At least one place is required" });
+//   }
+
+//   const updateQueries = [];
+//   const updateValues = [];
+
+//   places.forEach((place) => {
+//     if (!place.id || typeof place.id !== "number") {
+//       return res.status(400).json({ error: `Invalid or missing ID for place` });
+//     }
+
+//     let setClause = [];
+//     let values = [];
+
+//     if (place.latitude !== undefined) {
+//       if (typeof place.latitude === "number") {
+//         setClause.push(`latitude = $${values.length + 1}::double precision`);
+//         values.push(place.latitude);
+//       } else {
+//         return res.status(400).json({ error: `Invalid latitude value for place ID ${place.id}` });
+//       }
+//     }
+
+//     if (place.longitude !== undefined) {
+//       if (typeof place.longitude === "number") {
+//         setClause.push(`longitude = $${values.length + 1}::double precision`);
+//         values.push(place.longitude);
+//       } else {
+//         return res.status(400).json({ error: `Invalid longitude value for place ID ${place.id}` });
+//       }
+//     }
+
+//     if (setClause.length > 0) {
+//       values.push(place.id);
+//       const query = `UPDATE places SET ${setClause.join(", ")} WHERE id = $${values.length} RETURNING *;`;
+//       updateQueries.push({ query, values });
+//     }
+//   });
+
+//   if (updateQueries.length === 0) {
+//     return res.status(400).json({ error: "No valid fields to update" });
+//   }
+
+//   try {
+//     const results = await Promise.all(
+//       updateQueries.map(({ query, values }) => req.client.query(query, values))
+//     );
+
+//     res.json({
+//       message: "Places updated successfully",
+//       results: results.map((result) => result.rows),
+//     });
+//   } catch (err) {
+//     console.error("Error updating places", err.stack);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// });
 
 
 router.get("/:id/images", async (req, res) => {

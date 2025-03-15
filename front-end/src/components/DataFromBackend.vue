@@ -1,23 +1,20 @@
+<script setup>
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
 
-  
-  <script setup>
-  import { ref, onMounted } from 'vue'
-  import axios from 'axios'
-  
-  const message = ref('')
-  
-  onMounted(() => {
-    axios.get('http://localhost:8080/api/data')
+const message = ref('');
+const apiBaseUrl = import.meta.env.VITE_APP_API_BASE; // ใช้ environment variable
+
+onMounted(() => {
+  axios.get(`${apiBaseUrl}/api/data`)  
     .then(response => {
-        message.value = response.data.message
-      })
-      .catch(error => {
-        console.error('There was an error!', error)
-      })
-  })
-  </script>
-  
-  <style scoped>
-  /* ใส่สไตล์ที่ต้องการที่นี่ */
-  </style>
-  
+      message.value = response.data.message;
+    })
+    .catch(error => {
+      console.error('There was an error!', error);
+    });
+});
+</script>
+
+<style scoped>
+</style>

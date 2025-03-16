@@ -1311,7 +1311,7 @@ const fetchHTMLAndSaveToJSON11 = async (url, outputFilePath) => {
         .nextUntil(".elementor-widget-heading:has(h2)")
         .filter(".elementor-widget-heading:has(h3)")
         .each((i, el) => {
-          const locationName = $(el).find("h3 a").text().trim();
+          const locationName = $(el).find("h3").text().trim();
           const locationLink = $(el).find("h3 a").attr("href") || "ไม่มีลิงก์";
 
           // ดึงแค่รูปเดียว
@@ -1383,6 +1383,144 @@ const fetchHTMLAndSaveToJSON11 = async (url, outputFilePath) => {
 fetchHTMLAndSaveToJSON11(
   "https://come.in.th/%E0%B8%82%E0%B8%AD%E0%B8%99%E0%B9%81%E0%B8%81%E0%B9%88%E0%B8%99/%E0%B8%A3%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B8%AD%E0%B8%B2%E0%B8%AB%E0%B8%B2%E0%B8%A3%E0%B9%81%E0%B8%99%E0%B8%B0%E0%B8%99%E0%B8%B3/",
   "./data/restaurant3.json"
+);
+
+const fetchHTMLAndSaveToJSON12 = async (url, outputFilePath) => {
+  const axios = require("axios");
+  const cheerio = require("cheerio");
+  const fs = require("fs");
+
+  try {
+    const { data: html } = await axios.get(url);
+    const $ = cheerio.load(html);
+    let results = [];
+
+    $("h2").each((i, el) => {
+      const locationName = $(el).text().trim().replace(/^\d+\./, '').trim();
+
+      if (!locationName || ["Post navigation"].includes(locationName)) return;
+
+      const imageDetails = $(el)
+        .nextUntil("h3")
+        .find("p em")
+        .first()
+        .text()
+        .trim();
+      const listImg = $(el)
+        .nextUntil("h2")
+        .find("img")
+        .map((i, img) => $(img).attr("src")?.trim())
+        .get();
+
+      let locationDetailRaw = [];
+      $(el)
+        .nextUntil("h2")
+        .each((j, elem) => {
+          const tag = $(elem).prop("tagName");
+          let textContent = $(elem).text().trim();
+
+          if (!textContent) return;
+
+          textContent = textContent.replace(/^\d+\./, '').trim(); // ลบตัวเลขหน้า
+
+          if (
+            (tag === "P" || tag === "DIV") &&
+            !$(elem).find("img").length &&
+            !textContent.includes("ที่ตั้ง:") &&
+            !textContent.includes("เวลาเปิด-ปิด:") &&
+            !textContent.includes("โทรศัพท์:") &&
+            !textContent.includes("Facebook:") &&
+            !textContent.includes("พิกัด GPS:")
+          ) {
+            locationDetailRaw.push(textContent);
+          }
+
+          if ($(elem).is("p[dir='ltr']")) {
+            textContent = textContent
+              .replace(
+                /(ที่ตั้ง|เวลาเปิด-ปิด|โทรศัพท์|Facebook|พิกัด GPS).*/s,
+                ""
+              )
+              .trim();
+
+            if (textContent) {
+              locationDetailRaw.push(textContent);
+            }
+          }
+
+          if (
+            ($(elem).is("p[style='text-align:left;']") &&
+              textContent.startsWith("มาเริ่มต้นกันที่คาเฟ่")) ||
+            textContent.startsWith(
+              "เปลี่ยนบรรยากาศจากร้านกาแฟติดถนนกลายเป็นสวนขนาดย่อมสำหรับสายคาเฟ่ไปกับ"
+            )
+          ) {
+            textContent = textContent
+              .replace(
+                /(ที่ตั้ง|เวลาเปิด-ปิด|โทรศัพท์|Facebook|พิกัด GPS).*/s,
+                ""
+              )
+              .trim();
+            locationDetailRaw.push(textContent);
+          }
+        });
+
+      let locationDetail = [...new Set(locationDetailRaw)]
+        .filter(
+          (item) =>
+            !/^(ที่ตั้ง|เวลาเปิด-ปิด|โทรศัพท์|Facebook|พิกัด GPS|บทความแนะนำ:|Tags:)/.test(
+              item
+            ) &&
+            item !== "20 คาเฟ่ขอนแก่น น่าเที่ยว อัพเดตใหม่ 2567" &&
+            item !== "(adsbygoogle = window.adsbygoogle || []).push({});"
+        )
+        .join("\n");
+
+      if (!locationDetail.trim()) {
+        locationDetail = "";
+      }
+
+      let listItems = [];
+      $(el)
+        .nextUntil("h2")
+        .each((j, elem) => {
+          const textContent = $(elem).text().trim();
+          if (!textContent) return;
+
+          const detailMatches = textContent.matchAll(
+            /(ที่ตั้ง|เวลาเปิด-ปิด|โทรศัพท์|Facebook|พิกัด GPS)\s*:\s*(.*?)(?=\s*(?:ที่ตั้ง|เวลาเปิด-ปิด|โทรศัพท์|Facebook|พิกัด GPS|$))/g
+          );
+          for (const match of detailMatches) {
+            const key = match[1].trim();
+            const value = match[2].trim();
+            listItems.push(`${key}: ${value}`);
+          }
+        });
+
+      results.push({
+        สถานที่: locationName,
+        รูปภาพ: listImg.length > 0 ? listImg : ["ไม่มีรูปภาพ"],
+        รายละเอียดรูปภาพ: imageDetails || "ขอบคุณรูปภาพจาก : ชิลไปไหน chillpainai",
+        รายละเอียด: locationDetail || "ไม่มีรายละเอียด",
+        ข้อมูลที่ค้นพบ: listItems.length > 0 ? listItems : ["ไม่มีข้อมูล"],
+      });
+    });
+
+    if (results.length === 0) {
+      console.log("No data found. Please check the website structure.");
+      return;
+    }
+
+    fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2), "utf8");
+    // console.log(`Data saved to ${outputFilePath}`);
+  } catch (error) {
+    console.error("Error fetching and saving data:", error);
+  }
+};
+
+fetchHTMLAndSaveToJSON12(
+  "https://chillpainai.com/scoop/16185/20-%E0%B8%84%E0%B8%B2%E0%B9%80%E0%B8%9F%E0%B9%88%E0%B8%82%E0%B8%AD%E0%B8%99%E0%B9%81%E0%B8%81%E0%B9%88%E0%B8%99-%E0%B8%96%E0%B9%88%E0%B8%B2%E0%B8%A2%E0%B8%A3%E0%B8%B9%E0%B8%9B%E0%B8%AA%E0%B8%A7%E0%B8%A2-%E0%B8%99%E0%B9%88%E0%B8%B2%E0%B9%84%E0%B8%9B%E0%B9%80%E0%B8%8A%E0%B9%87%E0%B8%84%E0%B8%AD%E0%B8%B4%E0%B8%99-%E0%B8%AD%E0%B8%B1%E0%B8%9B%E0%B9%80%E0%B8%94%E0%B8%95%E0%B9%83%E0%B8%AB%E0%B8%A1%E0%B9%88-2567",
+  "./data/cafe4.json"
 );
 
 const loadDataFromFile = (filePath) => {
@@ -4797,7 +4935,7 @@ const getNearbyPlacesInfo = async (placeName, dbClient) => {
                     text: "ที่อยู่",
                     color: "#aaaaaa",
                     size: "sm",
-                    flex: 2,
+                    flex: 10,
                   },
                   {
                     type: "text",
@@ -4805,7 +4943,7 @@ const getNearbyPlacesInfo = async (placeName, dbClient) => {
                     wrap: true,
                     color: "#666666",
                     size: "sm",
-                    flex: 5,
+                    flex: 10,
                   },
                 ],
               },
@@ -4818,7 +4956,7 @@ const getNearbyPlacesInfo = async (placeName, dbClient) => {
                     text: "ระยะทาง",
                     color: "#aaaaaa",
                     size: "sm",
-                    flex: 2,
+                    flex: 10,
                   },
                   {
                     type: "text",
@@ -4827,11 +4965,11 @@ const getNearbyPlacesInfo = async (placeName, dbClient) => {
                       coordinates.lng,
                       place.latitude,
                       place.longitude
-                    ).toFixed(2)} กม.`,
+                    ).toFixed(10)} กม.`,
                     wrap: true,
                     color: "#666666",
                     size: "sm",
-                    flex: 5,
+                    flex: 10,
                   },
                 ],
               },
@@ -4904,7 +5042,7 @@ const handleNearbyPlacesIntent = async (agent, questionText, dbClient) => {
   const placeName = questionText;
   console.log("🔍 Handling nearby places intent for:", placeName);
 
-  const lineId = agent.originalRequest?.payload?.data?.source?.userId; // ✅ ดึง LINE ID ของผู้ใช้
+  const lineId = agent.originalRequest?.payload?.data?.source?.userId; 
   if (!lineId) {
     console.warn("⚠️ No LINE userId found.");
     agent.add("ขออภัย ไม่สามารถดึงข้อมูลผู้ใช้ได้.");

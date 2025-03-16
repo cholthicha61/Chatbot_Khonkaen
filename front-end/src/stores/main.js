@@ -203,7 +203,7 @@ export const useMainStore = defineStore('main', () => {
 
   async function fetchUsers() {
     try {
-      const res = await axios.get(ENDPOINT.USERS);  // ใช้ ENDPOINT.USERS แทน URL ตายตัว
+      const res = await axios.get(ENDPOINT.USERS);  
       if (res.status === 200) {
         console.log('Fetched Users:', res.data);
         users.value = res.data;
@@ -215,7 +215,7 @@ export const useMainStore = defineStore('main', () => {
   
   async function fetchWeb() {
     try {
-      const res = await axios.get(ENDPOINT.WEB);  // ใช้ ENDPOINT.WEB แทน URL ตายตัว
+      const res = await axios.get(ENDPOINT.WEB);  
       console.log('Response data:', res.data);
       if (res.status === 200) {
         web.value = res.data;
@@ -228,7 +228,7 @@ export const useMainStore = defineStore('main', () => {
   
   async function fetchConversations() {
     try {
-      const res = await axios.get(ENDPOINT.CONVERSATIONS);  // ใช้ ENDPOINT.CONVERSATIONS แทน URL ตายตัว
+      const res = await axios.get(ENDPOINT.CONVERSATIONS);  
       if (res.status === 200) {
         console.log('Fetched conversations:', res.data);
         conversations.value = res.data;

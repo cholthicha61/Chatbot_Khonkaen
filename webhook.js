@@ -4725,6 +4725,8 @@ const getCoordinatesFromGeocoding = async (placeName) => {
 };
 
 const getNearbyPlacesInfo = async (placeName, dbClient) => {
+  console.log("🔍 Searching for nearby places for:", placeName);
+
   const coordinates = await getCoordinatesFromGeocoding(placeName);
   if (!coordinates) {
     console.log("❌ No coordinates found for place:", placeName);
@@ -4739,39 +4741,189 @@ const getNearbyPlacesInfo = async (placeName, dbClient) => {
     10,
     dbClient
   );
+
   if (nearbyPlacesFromDb.length === 0) {
     console.log("❌ No nearby places found in the database for:", placeName);
     return "ไม่พบสถานที่ใกล้เคียงในฐานข้อมูลที่คุณค้นหาค่ะ.";
   }
 
-  let responseMessage = "สถานที่ใกล้เคียงที่พบจากฐานข้อมูล:\n";
-  nearbyPlacesFromDb.forEach((place, index) => {
-    responseMessage += `${index + 1}. ${place.name} - ${
-      place.address
-    } (ระยะทาง ${getDistance(
-      coordinates.lat,
-      coordinates.lng,
-      place.latitude,
-      place.longitude
-    ).toFixed(2)} กม.)\n`;
+  console.log("✅ Found nearby places:", nearbyPlacesFromDb.length);
+
+  const flexContents = nearbyPlacesFromDb.map((place) => {
+    const imageUrls = place.image_link ? place.image_link.split(",") : [];
+    const firstImageUrl =
+      imageUrls.length > 0
+        ? imageUrls[0].trim()
+        : "https://cloud-atg.moph.go.th/quality/sites/default/files/default_images/default.png";
+
+    return {
+      type: "bubble",
+      hero: {
+        type: "image",
+        url: firstImageUrl,
+        size: "full",
+        aspectRatio: "20:13",
+        aspectMode: "cover",
+      },
+      body: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "text",
+            text: place.name || "ชื่อสถานที่ไม่ระบุ",
+            weight: "bold",
+            size: "xl",
+            wrap: true,
+          },
+          {
+            type: "text",
+            text: place.image_detail || "รายละเอียดไม่ระบุ",
+            size: "sm",
+            wrap: true,
+          },
+          {
+            type: "box",
+            layout: "vertical",
+            margin: "lg",
+            spacing: "sm",
+            contents: [
+              {
+                type: "box",
+                layout: "baseline",
+                contents: [
+                  {
+                    type: "text",
+                    text: "ที่อยู่",
+                    color: "#aaaaaa",
+                    size: "sm",
+                    flex: 2,
+                  },
+                  {
+                    type: "text",
+                    text: place.address || "ไม่ระบุ",
+                    wrap: true,
+                    color: "#666666",
+                    size: "sm",
+                    flex: 5,
+                  },
+                ],
+              },
+              {
+                type: "box",
+                layout: "baseline",
+                contents: [
+                  {
+                    type: "text",
+                    text: "ระยะทาง",
+                    color: "#aaaaaa",
+                    size: "sm",
+                    flex: 2,
+                  },
+                  {
+                    type: "text",
+                    text: `${getDistance(
+                      coordinates.lat,
+                      coordinates.lng,
+                      place.latitude,
+                      place.longitude
+                    ).toFixed(2)} กม.`,
+                    wrap: true,
+                    color: "#666666",
+                    size: "sm",
+                    flex: 5,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    };
   });
 
-  return responseMessage;
+  const flexMessage = {
+    type: "flex",
+    altText: "สถานที่ใกล้เคียง",
+    contents: {
+      type: "carousel",
+      contents: flexContents,
+    },
+  };
+
+  const flexSize = Buffer.byteLength(JSON.stringify(flexMessage), "utf8");
+  console.log("📏 Flex Message Size:", flexSize, "bytes");
+
+  if (flexSize > 50000) {
+    console.warn("⚠️ Flex Message เกินขนาดที่ LINE รองรับ (50,000 bytes)");
+  }
+
+  return flexMessage;
+};
+
+const sendLineMessage = async (userId, flexMessage) => {
+  if (!userId || !flexMessage || !flexMessage.contents) {
+    throw new Error("Invalid userId or flexMessage");
+  }
+
+  const payload = {
+    to: userId,
+    messages: [
+      {
+        type: "flex",
+        altText: "Flex Message",
+        contents: flexMessage.contents,
+      },
+    ],
+  };
+
+  try {
+    const response = await axios.post(
+      "https://api.line.me/v2/bot/message/push",
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.LINE_CHANNEL_ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("Message sent successfully:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error sending Flex Message:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to send message to LINE.");
+  }
 };
 
 const handleNearbyPlacesIntent = async (agent, questionText, dbClient) => {
   const placeName = questionText;
   console.log("🔍 Handling nearby places intent for:", placeName);
 
-  const lineId = agent.originalRequest.payload.data.source.userId; // ดึง Line ID จาก agent
-  const responseMessage = await getNearbyPlacesInfo(placeName, dbClient); // ส่ง dbClient ไปที่ getNearbyPlacesInfo
-  console.log("✅ Final Response for Nearby Places:", responseMessage);
+  const lineId = agent.originalRequest?.payload?.data?.source?.userId; // ✅ ดึง LINE ID ของผู้ใช้
+  if (!lineId) {
+    console.warn("⚠️ No LINE userId found.");
+    agent.add("ขออภัย ไม่สามารถดึงข้อมูลผู้ใช้ได้.");
+    return;
+  }
+
+  console.log("👤 LINE User ID:", lineId);
+
+  console.log("🔄 Fetching nearby places...");
+  const responseMessage = await getNearbyPlacesInfo(placeName, dbClient);
+
+  // console.log("🛠️ Response Message Type:", typeof responseMessage);
+  // console.log("🛠️ Response Message Content:", JSON.stringify(responseMessage, null, 2));
 
   if (dbClient) {
     await saveConversation(
       questionText,
-      `สถานที่ใกล้เคียง`,
-      lineId, 
+      "สถานที่ใกล้เคียง",
+      lineId,
       null,
       null,
       "Flex Message",
@@ -4784,12 +4936,21 @@ const handleNearbyPlacesIntent = async (agent, questionText, dbClient) => {
     );
   }
 
-  const payload = new Payload(
-    "LINE",
-    { type: "text", text: responseMessage },
-    { sendAsMessage: true }
-  );
-  agent.add(payload);
+  if (typeof responseMessage === "string") {
+    console.log("ℹ️ Sending text response to user.");
+    agent.add(responseMessage);
+  } else {
+    console.log("📤 Sending Flex Message via sendFlexMessageToUser...");
+    try {
+      await sendLineMessage(lineId, responseMessage);
+      console.log("✅ Flex Message sent successfully.");
+
+      agent.add("");
+    } catch (error) {
+      console.error("❌ Error sending Flex Message:", error);
+      agent.add("เกิดข้อผิดพลาดในการส่ง Flex Message กรุณาลองใหม่อีกครั้ง.");
+    }
+  }
 };
 
 module.exports = { handleWebhookRequest };

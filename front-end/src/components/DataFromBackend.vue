@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
 const message = ref('');
-const apiBaseUrl = import.meta.env.VITE_APP_API_BASE; // ใช้ environment variable
+const apiBaseUrl = import.meta.env.VITE_APP_API_BASE; 
 
 onMounted(() => {
   axios.get(`${apiBaseUrl}/api/data`)  

@@ -110,28 +110,34 @@
               <label :for="'add-place-' + index" class="block mb-2 font-semibold text-gray-700">
                 Select Place {{ index + 1 }}:
               </label>
-              <select
-                :id="'add-place-' + index"
-                v-model="place.place_id"
-                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="" disabled>Select a place</option>
-                <option
-                  v-for="placeOption in availablePlaces(index)"
-                  :key="placeOption.id"
-                  :value="placeOption.id"
+
+              <div class="flex items-center space-x-2">
+                <!-- Select Place Dropdown -->
+                <select
+                  :id="'add-place-' + index"
+                  v-model="place.place_id"
+                  class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {{ placeOption.name }}
-                </option>
-              </select>
-              <BaseButton
-                v-if="currentFlextourist.places.length > 1"
-                color="danger"
-                small
-                :icon="mdiTrashCanOutline"
-                @click="removePlaceField(index)"
-                class="my-2"
-              />
+                  <option value="" disabled>Select a place</option>
+                  <option
+                    v-for="placeOption in availablePlaces(index)"
+                    :key="placeOption.id"
+                    :value="placeOption.id"
+                  >
+                    {{ placeOption.name }}
+                  </option>
+                </select>
+
+                <!-- ปุ่มถังขยะ -->
+                <BaseButton
+                  v-if="currentFlextourist.places.length > 1"
+                  color="danger"
+                  small
+                  :icon="mdiTrashCanOutline"
+                  @click="removePlaceField(index)"
+                  class="my-2"
+                />
+              </div>
             </div>
 
             <!-- Button to Add More Places -->

@@ -1878,9 +1878,9 @@ const getAnswerForIntent = async (
   intentName,
   placeName,
   dbClient,
-  similarityThreshold = 0.4,
-  wordSimThreshold = 0.3,
-  editDistanceMax = 10
+  similarityThreshold = 0.3,
+  wordSimThreshold = 0.2,
+  editDistanceMax = 12
 ) => {
   if (!dbClient) {
     throw new Error("❌ Database client is not initialized.");
@@ -1925,6 +1925,8 @@ const getAnswerForIntent = async (
 
     console.log(`🔍 Running query for place: "${placeName}"`);
     const result = await dbClient.query(query, [placeName]);
+
+    console.log(`🟢 Raw Query Result:`, result.rows); // 🔍 ดูค่าที่ได้จากฐานข้อมูล
 
     if (result.rows.length === 0) {
       console.log("❌ No matching data found in places table.");
@@ -1973,9 +1975,12 @@ const getAnswerForIntent = async (
     };
 
     if (intentName === "ค่าธรรมเนียมการเข้า") {
-      filteredAnswer.fee = bestMatch.answer
-        ? bestMatch.answer.trim()
-        : "ไม่พบข้อมูลค่าธรรมเนียมการเข้า";
+      if (bestMatch.answer !== null && bestMatch.answer !== undefined) {
+        filteredAnswer.fee = bestMatch.answer.trim();
+      } else {
+        console.log("❌ ค่า `admission_fee` เป็น null หรือว่าง");
+        filteredAnswer.fee = "ไม่พบข้อมูลค่าธรรมเนียมการเข้า";
+      }
     } else if (intentName === "เส้นทางไปยังสถานที่") {
       filteredAnswer.address = bestMatch.answer
         ? bestMatch.answer.trim()
@@ -3360,13 +3365,15 @@ const sendFlexMessageTourist = async (agent, intentName, dbClient) => {
   let type = receivedParams?.type || null;
   let type_food = receivedParams?.type_food || null;
   let districtType = receivedParams?.district_type || null;
+  let restaurant_type = receivedParams?.restaurant_type || null;
+  let restaurant_buf = receivedParams?.restaurant_buf || null;
   console.log("📍 Received Parameters:", receivedParams);
 
   if (Array.isArray(type)) {
     type = type[0];
     console.log(`✅ ใช้ type แทน: ${type}`);
   }
-  // ตรวจสอบว่า district_type ตรงกับอำเภอที่กำหนด
+
   if (districtType) {
     if (districtType.includes("อำเภอเมืองขอนแก่น")) {
       intentName = "อำเภอเมืองขอนแก่น";
@@ -3449,12 +3456,35 @@ const sendFlexMessageTourist = async (agent, intentName, dbClient) => {
     }
   }
 
+  if (restaurant_type) {
+    if (restaurant_type.includes("อาหารระดับมิชลินไกด์")) {
+      intentName = "อาหารระดับมิชลินไกด์";
+      console.log(`✅ ใช้ restaurant_type โดยตรง: ${intentName}`);
+    } else {
+      console.log(
+        `⚠️ ไม่พบ intent ที่ตรงกับ restaurant_type: ${restaurant_type}`
+      );
+    }
+  }
+  if (restaurant_buf) {
+    if (restaurant_buf.includes("ร้านอาหารบุฟเฟ่")) {
+      intentName = "ร้านอาหารบุฟเฟ่";
+      console.log(`✅ ใช้ restaurant_buf โดยตรง: ${intentName}`);
+    } else {
+      console.log(
+        `⚠️ ไม่พบ intent ที่ตรงกับ restaurant_type: ${restaurant_buf}`
+      );
+    }
+  }
+
   console.log("🔎 ตรวจสอบ intents:", {
     questionText,
     intentName,
     type,
     districtType,
     type_food,
+    restaurant_type,
+    restaurant_buf,
   });
 
   try {
@@ -3876,7 +3906,7 @@ const handleIntent = async (
     console.log(
       `🔍 Fetching answer for place: "${placeName}" with intent: "${intentName}"`
     );
-    const dbResult = await getAnswerForIntent(intentName, location, dbClient);
+    const dbResult = await getAnswerForIntent(intentName, placeName, dbClient);
 
     if (dbResult && dbResult.answer) {
       console.log(`Database result found for ${placeName}:`, dbResult.answer);

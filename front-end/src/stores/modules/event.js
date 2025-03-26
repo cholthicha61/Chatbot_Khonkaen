@@ -16,16 +16,25 @@ export const useEventsStore = defineStore('event', () => {
         event.value = res.data
       }
     } catch (error) {
-      console.error('Error fetching event:', error)
+      console.error('❌ Error fetching event:', error)
     }
   }
 
   async function addEvent(eventToAdd) {
     try {
-      console.log('📤 Axios Sending Data:', eventToAdd) 
-      const res = await axios.post(`${ENDPOINT.EVENT}`, eventToAdd)
+      console.log('📤 Axios Sending Data:', eventToAdd)
+      const res = await axios.post(ENDPOINT.EVENT, eventToAdd)
       console.log('✅ Event Added Successfully:', res.data)
+
       await fetchEvent()
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: 'Event added successfully!',
+        timer: 1500,
+        showConfirmButton: false,
+      })
     } catch (error) {
       console.error(
         '❌ Axios Error adding event:',
@@ -41,11 +50,25 @@ export const useEventsStore = defineStore('event', () => {
 
   const updateEvent = async (eventToUpdate) => {
     try {
+      console.log(`📤 Updating Event ID: ${eventToUpdate.id}`)
       await axios.patch(`${ENDPOINT.EVENT}/${eventToUpdate.id}`, eventToUpdate)
-
+      
       await fetchEvent()
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Updated!',
+        text: 'Event updated successfully!',
+        timer: 1500,
+        showConfirmButton: false,
+      })
     } catch (error) {
-      console.error('Error updating evnet:', error)
+      console.error('❌ Error updating event:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error Updating Event',
+        text: error.response ? error.response.data : 'Failed to update event',
+      })
     }
   }
 
@@ -54,12 +77,12 @@ export const useEventsStore = defineStore('event', () => {
       console.error("❌ Error: Event ID is missing");
       return;
     }
-  
+
     try {
       console.log(`📤 Sending DELETE request for Event ID: ${id}`);
       await axios.delete(`${ENDPOINT.EVENT}/${id}`);
       console.log(`✅ Event with ID ${id} deleted successfully.`);
-  
+
       Swal.fire({
         icon: "success",
         title: "Deleted!",
@@ -67,7 +90,7 @@ export const useEventsStore = defineStore('event', () => {
         timer: 1500,
         showConfirmButton: false,
       });
-  
+
       // ✅ ลบ Event ออกจาก `event.value` โดยตรง
       event.value = event.value.filter((e) => e.id !== id);
     } catch (error) {
@@ -79,7 +102,6 @@ export const useEventsStore = defineStore('event', () => {
       });
     }
   };
-  
 
   return {
     event,

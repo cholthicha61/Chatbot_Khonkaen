@@ -26,6 +26,7 @@
                 <th class="px-4 py-2 text-left">Event Month</th>
                 <th class="px-4 py-2 text-left">Activity_time</th>
                 <th class="px-4 py-2 text-left">Opening_hours</th>
+                <th class="px-4 py-2 text-left">Flex Rank</th>
                 <th class="px-4 py-2 text-left">Image Link</th>
                 <th class="px-4 py-2 text-left">Image Detail</th>
                 <th class="px-4 py-2 text-left">Created</th>
@@ -70,7 +71,9 @@
                 <td :class="!event.opening_hours ? 'text-red-500' : ''">
                   {{ event.opening_hours || 'No data available' }}
                 </td>
-
+                <td :class="!event.rank ? 'text-red-500' : ''">
+                  {{ event.rank || 'No data available' }}
+                </td>
                 <td>
                   <a
                     :href="event.image_link"
@@ -206,6 +209,18 @@
                 placeholder="Enter opening_hours"
               ></textarea>
             </div>
+            <div class="mb-4">
+              <label for="add-flex-rank" class="block mb-2 font-semibold text-gray-700">
+                Flex Rank:
+              </label>
+              <input
+                id="add-flex-rank"
+                v-model="currentEvents.rank"
+                type="number"
+                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter Flex rank"
+              />
+            </div>
 
             <div class="mb-4">
               <label for="add-image-link" class="block mb-2 font-semibold text-gray-700">
@@ -340,6 +355,18 @@
                 eventholder="Enter opening_hours"
               ></textarea>
             </div>
+            <div class="mb-4">
+              <label for="add-flex-rank" class="block mb-2 font-semibold text-gray-700">
+                Flex Rank:
+              </label>
+              <input
+                id="add-flex-rank"
+                v-model="currentEvents.rank"
+                type="number"
+                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter Flex rank"
+              />
+            </div>
 
             <div class="mb-4">
               <label for="add-image-link" class="block mb-2 font-semibold text-gray-700">
@@ -406,19 +433,45 @@ const currentEvents = ref({
   opening_hours: '',
   address: '',
   contact_link: '',
+  rank: '',
   image_link: '',
   image_detail: ''
 })
 const thaiMonths = [
-  "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
-  "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
-];
+  'มกราคม',
+  'กุมภาพันธ์',
+  'มีนาคม',
+  'เมษายน',
+  'พฤษภาคม',
+  'มิถุนายน',
+  'กรกฎาคม',
+  'สิงหาคม',
+  'กันยายน',
+  'ตุลาคม',
+  'พฤศจิกายน',
+  'ธันวาคม'
+]
 
 const events = computed(() => {
-  return store.event.slice().sort((a, b) => {
-    return thaiMonths.indexOf(a.event_month) - thaiMonths.indexOf(b.event_month);
-  });
-});
+  const groupedByMonth = {}
+
+  store.event.forEach((event) => {
+    const month = event.event_month
+    if (!groupedByMonth[month]) groupedByMonth[month] = []
+    groupedByMonth[month].push(event)
+  })
+
+  let sortedEvents = []
+
+  thaiMonths.forEach((month) => {
+    if (groupedByMonth[month]) {
+      const sortedInMonth = groupedByMonth[month].sort((a, b) => a.rank - b.rank)
+      sortedEvents = [...sortedEvents, ...sortedInMonth]
+    }
+  })
+
+  return sortedEvents
+})
 
 onMounted(() => {
   store.fetchEvent()
@@ -434,6 +487,7 @@ function openAddModal() {
     opening_hours: '',
     address: '',
     contact_link: '',
+    rank: '',
     image_link: '',
     image_detail: ''
   }
@@ -441,7 +495,10 @@ function openAddModal() {
 
 function openEditModal(event) {
   isEditModalActive.value = true
-  currentEvents.value = { ...event }
+  currentEvents.value = {
+    ...event,
+    rank: event.rank || 1 // ใช้ค่า default 1 หากไม่มีค่า rank
+  }
 }
 
 function closeAddModal() {
@@ -453,6 +510,43 @@ function closeEditModal() {
 }
 
 async function saveAdd() {
+  if (parseInt(currentEvents.value.rank) <= 0) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Rank',
+      text: 'กรุณากรอก Flex Rank เป็นจำนวนเต็มบวกเท่านั้น',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#FF5722'
+    })
+    return
+  }
+  const isDuplicateRankInMonth = store.event.some(
+    (ev) =>
+      ev.event_month === currentEvents.value.event_month &&
+      parseInt(ev.rank) === parseInt(currentEvents.value.rank)
+  )
+
+  if (isDuplicateRankInMonth) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Duplicate Flex Rank',
+      text: `ลำดับ Flex Rank นี้ถูกใช้ไปแล้วในเดือน ${currentEvents.value.event_month}`,
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#FF5722'
+    })
+    return
+  }
+  if (!currentEvents.value.rank) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Rank',
+      text: 'กรุณากรอกลำดับของงานอีเวนต์',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#FF5722'
+    })
+    return
+  }
+
   if (!currentEvents.value.event_name) {
     Swal.fire({
       icon: 'warning',
@@ -490,8 +584,9 @@ async function saveAdd() {
     description: currentEvents.value.description || null,
     event_month: currentEvents.value.event_month || null,
     activity_time: currentEvents.value.activity_time || null,
-    opening_hours: currentEvents.value.opening_hours || null, // ✅ อนุญาตให้เป็น null ได้
+    opening_hours: currentEvents.value.opening_hours || null,
     address: currentEvents.value.address || null,
+    rank: currentEvents.value.rank || 1,
     image_link: currentEvents.value.image_link || null,
     image_detail: currentEvents.value.image_detail || null
   }
@@ -516,6 +611,34 @@ async function saveAdd() {
 }
 
 async function saveEdit() {
+  if (!currentEvents.value.rank) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Rank',
+      text: 'กรุณากรอกลำดับของงานอีเวนต์',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#FF5722'
+    })
+    return
+  }
+  const isDuplicateRankInMonth = store.event.some(
+    (ev) =>
+      ev.event_month === currentEvents.value.event_month &&
+      parseInt(ev.rank) === parseInt(currentEvents.value.rank) &&
+      ev.id !== currentEvents.value.id
+  )
+
+  if (isDuplicateRankInMonth) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Duplicate Flex Rank',
+      text: `ลำดับ Flex Rank นี้ถูกใช้ไปแล้วในเดือน ${currentEvents.value.event_month}`,
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#FF5722'
+    })
+    return
+  }
+
   if (!currentEvents.value.id) {
     Swal.fire({
       icon: 'error',
@@ -564,7 +687,6 @@ async function saveEdit() {
     })
   }
 }
-
 
 async function confirmDelete(id) {
   console.log('⚠️ Confirm delete for Event ID:', id)
@@ -639,8 +761,6 @@ function showFullDescription(description) {
     confirmButtonColor: '#0277bd'
   })
 }
-
-
 </script>
 
 <style>

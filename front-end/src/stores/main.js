@@ -378,49 +378,69 @@ async function fetchEvent() {
       event.value = res.data
     }
   } catch (error) {
-    console.error('Error fetching event:', error)
+    console.error('❌ Error fetching event:', error)
   }
 }
 
 async function addEvent(eventToAdd) {
   try {
-    console.log('📤 Axios Sending Data:', eventToAdd) 
-    const res = await axios.post(`${ENDPOINT.EVENT}`, eventToAdd)
+    console.log('📤 Axios Sending Data:', eventToAdd)
+    const res = await axios.post(ENDPOINT.EVENT, eventToAdd)
     console.log('✅ Event Added Successfully:', res.data)
+
     await fetchEvent()
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Success!',
+      text: 'Event added successfully!',
+      timer: 1500,
+      showConfirmButton: false,
+    })
   } catch (error) {
-    console.error(
-      '❌ Axios Error adding event:',
-      error.response ? error.response.data : error.message
-    )
+    console.error('❌ Axios Error adding event:', error)
     Swal.fire({
       icon: 'error',
       title: 'Error Adding Event',
-      text: error.response ? error.response.data : error.message
+      text: error.response?.data || 'Failed to add event'
     })
   }
 }
 
 const updateEvent = async (eventToUpdate) => {
   try {
-    await axios.patch(`${ENDPOINT.EVENT}/${eventToUpdate.id}`, eventToUpdate);
-    
-    await fetchEvent();
+    console.log(`📤 Updating Event ID: ${eventToUpdate.id}`)
+    await axios.patch(`${ENDPOINT.EVENT}/${eventToUpdate.id}`, eventToUpdate)
+
+    await fetchEvent()
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Updated!',
+      text: 'Event updated successfully!',
+      timer: 1500,
+      showConfirmButton: false,
+    })
   } catch (error) {
-    console.error('Error updating evnet:', error);
+    console.error('❌ Error updating event:', error)
+    Swal.fire({
+      icon: 'error',
+      title: 'Error Updating Event',
+      text: error.response?.data || 'Failed to update event'
+    })
   }
-};
+}
 
 const deleteEvent = async (id) => {
   if (!id) {
-    console.error("❌ Error: Event ID is missing");
-    return;
+    console.error("❌ Error: Event ID is missing")
+    return
   }
 
   try {
-    console.log(`📤 Sending DELETE request for Event ID: ${id}`);
-    await axios.delete(`${ENDPOINT.EVENT}/${id}`);
-    console.log(`✅ Event with ID ${id} deleted successfully.`);
+    console.log(`📤 Sending DELETE request for Event ID: ${id}`)
+    await axios.delete(`${ENDPOINT.EVENT}/${id}`)
+    console.log(`✅ Event with ID ${id} deleted successfully.`)
 
     Swal.fire({
       icon: "success",
@@ -428,19 +448,18 @@ const deleteEvent = async (id) => {
       text: `Event ID ${id} has been deleted.`,
       timer: 1500,
       showConfirmButton: false,
-    });
+    })
 
-    // ✅ ลบ Event ออกจาก `event.value` โดยตรง
-    event.value = event.value.filter((e) => e.id !== id);
+    event.value = event.value.filter((e) => e.id !== id)
   } catch (error) {
-    console.error("❌ Error deleting event:", error);
+    console.error("❌ Error deleting event:", error)
     Swal.fire({
       icon: "error",
       title: "Error deleting event",
-      text: error.response ? error.response.data.error : "Failed to delete event",
-    });
+      text: error.response?.data?.error || "Failed to delete event",
+    })
   }
-};
+}
 
 const updatePlaceImages = async (placeId, newImages) => {
   try {
